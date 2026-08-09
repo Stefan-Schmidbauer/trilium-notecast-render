@@ -1,0 +1,70 @@
+/* Print theme for the `meetingNote` type — #notecastTheme=meetingNote,
+ * note title "A4 Meeting Note".
+ *
+ * Optimised for a minutes sheet that gets handed round: the metadata block at
+ * the top has to be scannable in a second, and the actions table has to stay
+ * readable when it is the only thing someone photographs. */
+
+.notecast-doc {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 10.5pt;
+}
+
+.notecast-doc h1,
+.notecast-doc h2,
+.notecast-doc h3 {
+    font-family: "Helvetica", "Arial", sans-serif;
+}
+
+/* The metadata block: the run of short paragraphs between the title and the
+ * first ## heading. Boxed off so it reads as a header, not as prose. */
+.notecast-doc h1 + p {
+    margin-top: 0.8em;
+    padding: 4pt 6pt;
+    background: #f4f4f4;
+    border-left: 2pt solid #555;
+    line-height: 1.6;
+}
+
+.notecast-doc h2 {
+    font-size: 13pt;
+    margin-top: 1.5em;
+    padding-bottom: 0.15em;
+    border-bottom: 0.5pt solid #bbb;
+}
+
+.notecast-doc h3 {
+    font-size: 11.5pt;
+    margin-top: 1.1em;
+    color: #333;
+}
+
+/* Decisions and open questions carry the weight of the document. */
+.notecast-doc ul li { margin: 0.25em 0; }
+
+/* The actions table is the part people act on — give it more contrast than a
+ * plain table and keep a row intact across a page break. */
+.notecast-doc table {
+    font-size: 10pt;
+    margin: 0.8em 0;
+}
+
+.notecast-doc th {
+    background: #333;
+    color: #fff;
+    border-color: #333;
+    font-weight: bold;
+}
+
+.notecast-doc tbody tr:nth-child(even) td {
+    background: #f7f7f7;
+}
+
+.notecast-doc td { break-inside: avoid; }
+
+/* An empty owner or due cell is deliberate — it marks something the author
+ * still has to fill in, so make the gap visible rather than invisible. */
+.notecast-doc td:empty::after {
+    content: "—";
+    color: #999;
+}

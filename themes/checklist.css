@@ -1,0 +1,86 @@
+/* Print theme for the `checklist` type — #notecastTheme=checklist,
+ * note title "A4 Checklist".
+ *
+ * The point of a printed checklist is the box you tick, so the box has to
+ * survive whatever the Markdown converter does with `- [ ]`. Two cases are
+ * covered: a real <input type="checkbox"> (converters that support task lists)
+ * and the literal text "[ ]" left in the item (minimal converters). */
+
+.notecast-doc {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 11.5pt;
+}
+
+.notecast-doc h1 {
+    font-family: "Helvetica", "Arial", sans-serif;
+}
+
+.notecast-doc h2 {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 13pt;
+    margin-top: 1.4em;
+    padding-bottom: 0.15em;
+    border-bottom: 0.5pt solid #bbb;
+}
+
+/* Items sit flush left; the box is drawn as a marker so long text wraps
+ * aligned under itself rather than under the box. */
+.notecast-doc ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.notecast-doc ul li {
+    position: relative;
+    padding-left: 9mm;
+    margin: 0 0 3.5mm;
+    line-height: 1.45;
+    break-inside: avoid;
+}
+
+/* Case 1 — converter produced a real checkbox: enlarge it and place it in the
+ * gutter instead of drawing our own. */
+.notecast-doc ul li input[type="checkbox"] {
+    position: absolute;
+    left: 0;
+    top: 0.5mm;
+    width: 5mm;
+    height: 5mm;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1pt solid #111;
+    background: #fff;
+}
+
+/* Case 2 — no checkbox element: draw the box ourselves. Suppressed when an
+ * input is present, so the two never both appear. */
+.notecast-doc ul li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.5mm;
+    width: 5mm;
+    height: 5mm;
+    border: 1pt solid #111;
+    background: #fff;
+}
+
+.notecast-doc ul li:has(input[type="checkbox"])::before {
+    content: none;
+}
+
+/* A blank rule to write a value on: written as "____" in the source. */
+.notecast-doc ul li {
+    /* keeps underscores from being mistaken for a typo when they wrap */
+    word-break: keep-all;
+}
+
+/* Irreversible steps are bold in the source — make them unmissable on paper. */
+.notecast-doc ul li strong {
+    background: #fff2b8;
+    padding: 0 1pt;
+}
+
+/* Nothing to tick in a checklist should be split across two sheets. */
+.notecast-doc ul { break-inside: auto; }

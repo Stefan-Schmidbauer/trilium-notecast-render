@@ -1,0 +1,143 @@
+/* Print theme for the `itTip` type — #notecastTheme=itTip,
+ * note title "A4 IT Tip".
+ *
+ * One problem, one fix, one sheet — handed across a desk rather than filed.
+ * Three things have to survive that: the fix must be readable without reading,
+ * the version the tip applies to must be impossible to overlook, and the steps
+ * must not break across sheets mid-procedure.
+ *
+ * The type's sections are keyed by POSITION, not by their wording — the first
+ * paragraph is the fix, the first list is "applies to", the blockquote is the
+ * caveat. That is deliberate: the type leaves the document's language open, so
+ * a theme that matched on "Caveat" or "Achtung" would style German tips and
+ * English ones differently. See types/it-tip.md. */
+
+.notecast-doc {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 10.5pt;
+}
+
+/* The problem line. Sans-serif and tighter than the base: a tip is scanned in a
+ * stack, so the title has to work as an index entry. */
+.notecast-doc h1 {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 17pt;
+    line-height: 1.25;
+    border-bottom-width: 1pt;
+}
+
+/* The fix, one paragraph directly under the title. A reader who already knows
+ * the product stops here, so it gets the weight the title would otherwise have. */
+.notecast-doc h1 + p {
+    font-size: 12pt;
+    line-height: 1.4;
+    margin: 0.9em 0 1.2em;
+    padding: 6pt 9pt;
+    background: #f2f5f8;
+    border-left: 3pt solid #33506b;
+    break-inside: avoid;
+}
+
+.notecast-doc h1 + p strong {
+    font-weight: 700;
+}
+
+.notecast-doc h2 {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 12pt;
+    margin: 1.3em 0 0.35em;
+    color: #1a1a1a;
+}
+
+/* "Applies to" — the first section, and the one that decides whether the tip is
+ * even valid for this reader. Rendered as a compact meta line rather than a
+ * bullet list: it belongs to the header, not to the body, and it must not eat a
+ * third of the page it is supposed to leave room on. */
+.notecast-doc h2:first-of-type {
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #666;
+    margin: 0 0 0.15em;
+}
+
+.notecast-doc h2:first-of-type + ul {
+    list-style: none;
+    padding: 0 0 0.5em;
+    margin: 0 0 1em;
+    font-size: 9.5pt;
+    color: #333;
+    border-bottom: 0.5pt solid #ccc;
+}
+
+.notecast-doc h2:first-of-type + ul li {
+    display: inline;
+    margin: 0;
+}
+
+.notecast-doc h2:first-of-type + ul li + li::before {
+    content: " · ";
+    color: #999;
+}
+
+/* The steps. Numbers sit in the gutter so wrapped text lines up under itself,
+ * and no single step is ever split across two sheets. */
+.notecast-doc ol {
+    padding-left: 7mm;
+    margin: 0 0 0.8em;
+}
+
+.notecast-doc ol li {
+    margin: 0 0 2.5mm;
+    padding-left: 1mm;
+    line-height: 1.45;
+    break-inside: avoid;
+}
+
+.notecast-doc ol li::marker {
+    font-weight: 700;
+    color: #33506b;
+}
+
+/* Commands are copied by hand off the paper — keep them crisp and unsplit. */
+.notecast-doc pre {
+    background: #f7f7f7;
+    border: 0.5pt solid #bbb;
+    border-left: 2pt solid #555;
+    padding: 6pt 8pt;
+    line-height: 1.35;
+    break-inside: avoid;
+}
+
+/* Paths, keys and keyboard shortcuts run through the prose; they have to be
+ * distinguishable from it at a glance, because getting one character wrong is
+ * the whole failure mode of a printed tip. */
+.notecast-doc :not(pre) > code {
+    background: #f0f0f0;
+    padding: 0.5pt 2.5pt;
+    border: 0.25pt solid #ddd;
+    border-radius: 2pt;
+}
+
+/* The caveat, written as a blockquote. This is the one thing on the sheet a
+ * reader may hit only after the damage is done, so it is framed rather than
+ * indented — and it never wraps onto a second sheet on its own. */
+.notecast-doc blockquote {
+    margin: 0.5em 0 0;
+    padding: 6pt 9pt;
+    border: 0.75pt solid #c8a200;
+    border-left-width: 3pt;
+    background: #fffbe8;
+    color: #222;
+    break-inside: avoid;
+}
+
+.notecast-doc blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* No page number: a tip that runs to a second sheet is a Knowledge Base entry
+ * that has not been rewritten yet, and numbering it would make that look
+ * intended. The print date is likewise left off — the version in "applies to"
+ * is what dates a tip, not the day it came out of the printer. */

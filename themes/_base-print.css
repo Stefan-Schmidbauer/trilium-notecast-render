@@ -1,0 +1,115 @@
+/* Shared print base for every Notecast print theme.
+ *
+ * NOT a note by itself. `build-zip.py` concatenates this file with one
+ * per-type file (e.g. `letter.css`) to produce the CSS of a single theme note.
+ * A #notecastTheme note has to be self-contained — Trilium notes cannot @import
+ * one another — so the duplication happens at build time and the repo stays DRY.
+ *
+ * Scope: the render widget injects the note content into `.notecast-doc` inside
+ * a fresh print window, together with the chosen theme's CSS. */
+
+@page {
+    size: A4 portrait;
+    margin: 20mm 18mm;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    color: #111;
+    font-family: "Georgia", "Times New Roman", serif;
+    font-size: 11pt;
+    line-height: 1.5;
+}
+
+.notecast-doc {
+    max-width: 100%;
+}
+
+.notecast-doc h1 {
+    font-size: 20pt;
+    margin: 0 0 0.4em;
+    border-bottom: 1.5pt solid #111;
+    padding-bottom: 0.2em;
+}
+
+.notecast-doc h2 { font-size: 15pt; margin: 1.1em 0 0.3em; }
+.notecast-doc h3 { font-size: 12.5pt; margin: 0.9em 0 0.3em; }
+
+.notecast-doc p,
+.notecast-doc ul,
+.notecast-doc ol { margin: 0 0 0.6em; }
+
+.notecast-doc li { margin: 0.15em 0; }
+
+.notecast-doc img { max-width: 100%; height: auto; }
+
+/* Pandoc-style size classes: the widget carries `![x](f.png){.img-large}`
+   through to the tag, and the slide templates write them. Sized in mm rather
+   than the presenter's rem — these are printed figures, not screen ones, and a
+   height relative to the print font is not what a page layout needs. */
+.notecast-doc img.img-tiny { height: 10mm; width: auto; }
+.notecast-doc img.img-small { height: 20mm; width: auto; }
+.notecast-doc img.img-medium { height: 40mm; width: auto; }
+.notecast-doc img.img-large { height: 70mm; width: auto; }
+.notecast-doc img.img-xlarge { height: 100mm; width: auto; }
+.notecast-doc img.img-fit { max-height: 100%; max-width: 100%; width: auto; }
+.notecast-doc img.center { display: block; margin-left: auto; margin-right: auto; }
+
+/* A reference that matched no attachment. Deliberately loud: on paper a broken
+   image is invisible, and a figure that silently vanished is worse than one
+   that announces itself. */
+.notecast-doc .ncr-missing-image {
+    display: inline-block;
+    padding: 0.2em 0.5em;
+    border: 0.5pt dashed #b00;
+    color: #b00;
+    font-size: 0.9em;
+}
+
+.notecast-doc pre {
+    background: #f4f4f4;
+    border: 0.5pt solid #ccc;
+    padding: 8pt;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 9.5pt;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.notecast-doc code {
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 9.5pt;
+}
+
+.notecast-doc table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.6em 0;
+}
+
+.notecast-doc th,
+.notecast-doc td {
+    border: 0.5pt solid #999;
+    padding: 4pt 6pt;
+    text-align: left;
+}
+
+.notecast-doc blockquote {
+    margin: 0.6em 0;
+    padding-left: 10pt;
+    border-left: 2pt solid #ccc;
+    color: #444;
+}
+
+/* Page-break helpers. Use the .page-break marker to force a new sheet; keep
+ * headings with what follows them, and never split an atomic block. */
+.notecast-doc .page-break { break-after: page; }
+.notecast-doc h1,
+.notecast-doc h2,
+.notecast-doc h3 { break-after: avoid; }
+.notecast-doc pre,
+.notecast-doc table,
+.notecast-doc img,
+.notecast-doc blockquote { break-inside: avoid; }

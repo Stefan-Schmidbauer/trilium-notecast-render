@@ -1,0 +1,60 @@
+/* Print theme for the `kbEntry` type — #notecastTheme=kbEntry,
+ * note title "A4 Knowledge Base".
+ *
+ * A reference article printed for filing or for reading away from a screen.
+ * Code blocks and the "See also" section get the attention, because those are
+ * the parts a reader copies or follows up. */
+
+.notecast-doc {
+    font-size: 10.5pt;
+}
+
+/* The summary paragraph under the title carries the "is this the right
+ * article?" decision — set it apart from the body. */
+.notecast-doc h1 + p {
+    font-size: 11.5pt;
+    line-height: 1.45;
+    color: #222;
+    margin-bottom: 1.2em;
+    padding-bottom: 0.8em;
+    border-bottom: 0.25pt solid #ddd;
+}
+
+.notecast-doc h2 {
+    margin-top: 1.5em;
+    color: #1a1a1a;
+}
+
+/* Commands are the reason this gets printed — keep them crisp and never split
+ * a block across sheets. */
+.notecast-doc pre {
+    background: #f7f7f7;
+    border: 0.5pt solid #bbb;
+    border-left: 2pt solid #555;
+    padding: 7pt 8pt;
+    line-height: 1.35;
+    break-inside: avoid;
+}
+
+.notecast-doc :not(pre) > code {
+    background: #f0f0f0;
+    padding: 0.5pt 2pt;
+    border-radius: 2pt;
+}
+
+/* "See also" closes the article; it is a pointer list, not body text. */
+.notecast-doc h2:last-of-type ~ ul {
+    font-size: 10pt;
+    color: #333;
+}
+
+/* A printed reference article is filed and read later, so a page number and the
+ * print date are worth more here than on any other type. */
+@page {
+    @bottom-right {
+        content: counter(page);
+        font-family: "Georgia", serif;
+        font-size: 9pt;
+        color: #666;
+    }
+}

@@ -1,0 +1,40 @@
+/* Print theme for the `note` type — #notecastTheme=note, note title "A4 Note".
+ *
+ * A short captured thought on paper. The type deliberately has no heading in
+ * its body (the Trilium note title is the heading), so this theme is mostly
+ * about generous type and a wide margin to write in by hand. */
+
+@page {
+    size: A4 portrait;
+    /* Wider right margin: room for a handwritten remark next to the text. */
+    margin: 25mm 45mm 25mm 25mm;
+}
+
+.notecast-doc {
+    font-size: 12pt;
+    line-height: 1.6;
+}
+
+.notecast-doc p {
+    margin: 0 0 0.8em;
+    orphans: 2;
+    widows: 2;
+}
+
+.notecast-doc ul,
+.notecast-doc ol {
+    margin: 0 0 0.8em;
+    padding-left: 6mm;
+}
+
+.notecast-doc li {
+    margin: 0.3em 0;
+}
+
+.notecast-doc strong {
+    font-weight: bold;
+}
+
+/* A note is short by definition — if one runs past a single sheet it is really
+ * a knowledge base entry. Nothing enforces that, but do not fight the overflow
+ * with cramped spacing either. */

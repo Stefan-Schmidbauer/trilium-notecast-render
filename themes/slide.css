@@ -1,0 +1,61 @@
+/* Print theme for the `slide` type — #notecastTheme=slide,
+ * note title "A4 Slide (landscape)".
+ *
+ * A single slide printed as a handout sheet. Landscape, because a slide is a
+ * wide format and forcing it into portrait wastes most of the page.
+ *
+ * The slide type itself is owned by `trilium-presenter-plugin`; only this print
+ * theme lives here. Screen themes stay in the presenter under #presenterTheme —
+ * see the label contract. */
+
+@page {
+    size: A4 landscape;
+    margin: 15mm 18mm;
+}
+
+.notecast-doc {
+    /* Slide text is sparse and read at a distance — set it larger than body
+     * copy so a printed handout stays legible on a table. */
+    font-size: 13pt;
+    line-height: 1.45;
+}
+
+.notecast-doc h1 {
+    font-size: 24pt;
+    margin-bottom: 0.5em;
+}
+
+.notecast-doc h2 {
+    font-size: 17pt;
+}
+
+.notecast-doc ul,
+.notecast-doc ol {
+    padding-left: 8mm;
+}
+
+.notecast-doc li {
+    margin: 0.35em 0;
+}
+
+/* Pandoc-style speaker notes (`::: notes`) are part of the slide source. On a
+ * handout they are usually wanted — set them apart rather than hiding them.
+ * To print without notes, add `display: none` here instead. */
+.notecast-doc .notes {
+    margin-top: 6mm;
+    padding: 4pt 6pt;
+    border-top: 0.5pt dashed #999;
+    font-size: 10pt;
+    color: #444;
+    break-inside: avoid;
+}
+
+/* Column layouts from the slide syntax should stay side by side on paper. */
+.notecast-doc .columns {
+    display: flex;
+    gap: 8mm;
+}
+
+.notecast-doc .column {
+    flex: 1;
+}

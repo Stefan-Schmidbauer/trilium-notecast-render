@@ -1,0 +1,23 @@
+# Secrets & local env
+.trilium-env
+.env*
+claude_desktop_config.json
+!*.example
+
+# Build artefacts
+*.zip
+
+# Python / tooling — both spellings; a missed pattern commits a whole virtualenv
+venv/
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+
+# Local assistant context — machine- and author-specific, not part of the project
+CLAUDE.md
+.claude/
+
+.DS_Store
+.pytest_cache/
+.ruff_cache/
