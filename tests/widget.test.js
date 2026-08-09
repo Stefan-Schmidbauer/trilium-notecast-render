@@ -445,8 +445,9 @@ test('a type id that is not a plain token falls back to all themes', () => {
 // ── the widget must not shadow its base class ────────────────────────────────
 
 /**
- * Names BasicWidget / NoteContextAwareWidget own. Defining any of them without
- * meaning to override it hands Trilium our method where it expects its own.
+ * Names BasicWidget / NoteContextAwareWidget / RightPanelWidget own. Defining
+ * any of them without meaning to override it hands Trilium our method where it
+ * expects its own.
  *
  * This shipped: the print routine was called `render()`, which is BasicWidget's
  * public mount entry point. Trilium called it to build the widget, got the print
@@ -454,7 +455,12 @@ test('a type id that is not a plain token falls back to all themes', () => {
  * down, note tree included. The presenter widget survived on the same base class
  * only because it happens to have no method by that name.
  *
- * `doRenderBody` and `refreshWithNote` are deliberate overrides and stay out.
+ * `doRender` matters twice over now that the base class is RightPanelWidget:
+ * that is where the collapsible card, the header and `this.$body` are built, so
+ * defining it here would leave doRenderBody with nothing to fill.
+ *
+ * `doRenderBody`, `refreshWithNote` and the `widgetTitle` / `position` /
+ * `parentWidget` getters are the deliberate overrides and stay out of the list.
  */
 const BASE_CLASS_METHODS = [
     'render', 'doRender', 'toggleInt', 'toggleExt', 'cleanup', 'remove',

@@ -21,19 +21,16 @@
  * divs", before reaching for a shared implementation.
  */
 
-// Deliberately mirrors trilium-presenter-plugin's widget markup, because both
-// mount in the same 'right-pane' and a user sees them stacked: h4 heading, 10px
-// padding, a bottom border to separate the panels, and a small muted label above
-// the theme picker. Without the heading and border the two run into each other
-// and neither is identifiable.
+// Body only — no heading, padding or separator here. As a RightPanelWidget this
+// markup is placed inside Trilium's own collapsible card, which supplies the
+// title (from widgetTitle) and the frame; adding our own would duplicate both
+// and look unlike every other right-pane panel.
 //
-// Order follows the presenter's too — settings first (theme, scope), the action
-// last — so the button that opens the print dialog is not above the options it
-// uses. Every element is reached by class via find(), so this block can be
-// rearranged without touching doRenderBody().
+// Order: settings first (theme, scope), the action last, so the button that
+// opens the print dialog is not above the options it uses. Every element is
+// reached by class via find(), so this block can be rearranged freely.
 const TPL = `
-<div class="notecast-render-widget" style="padding: 10px; border-bottom: 1px solid var(--main-border-color);">
-    <h4 style="margin: 0 0 8px 0;">Notecast Render</h4>
+<div class="notecast-render-widget">
     <div style="margin-bottom: 8px;">
         <label style="font-size: 0.85em; color: var(--muted-text-color); display: block; margin-bottom: 2px;">Theme</label>
         <select class="ncr-theme-select form-control" style="width: 100%; font-size: 0.9em;"></select>
@@ -46,7 +43,16 @@ const TPL = `
     </button>
 </div>`;
 
-class NotecastRenderWidget extends api.NoteContextAwareWidget {
+// RightPanelWidget, not NoteContextAwareWidget: it is the base class Trilium
+// documents for 'right-pane'. It builds the collapsible card — heading, expand
+// arrow, the panel frame — puts widgetTitle into the header, and calls
+// doRenderBody() to fill this.$body. Extending NoteContextAwareWidget instead
+// left that header rendered but empty, so the title had to be faked with an h4
+// inside the panel and the panel could not be collapsed like every other one.
+class NotecastRenderWidget extends api.RightPanelWidget {
+    // Shown in the card header by the base class.
+    get widgetTitle() { return 'Notecast Render'; }
+
     // 100, ahead of trilium-presenter-plugin's widget at 110 — both mount in
     // this same 'right-pane'. Equal positions would leave their order to the
     // order the widget notes load in, so it has to be decided here: printing a
@@ -55,14 +61,17 @@ class NotecastRenderWidget extends api.NoteContextAwareWidget {
     get position() { return 100; }
     get parentWidget() { return 'right-pane'; }
 
+    // Fills this.$body — must NOT assign this.$widget. The base class owns that
+    // property and has already built the card around this body; overwriting it
+    // hands Trilium a widget with no header and detaches what it mounted.
     doRenderBody() {
-        this.$widget = $(TPL);
-        this.$btn = this.$widget.find('.ncr-print-btn');
-        this.$select = this.$widget.find('.ncr-theme-select');
-        this.$subtreeRow = this.$widget.find('.ncr-subtree-row');
-        this.$subtree = this.$widget.find('.ncr-subtree-check');
+        this.$body.empty();
+        this.$body.append($(TPL));
+        this.$btn = this.$body.find('.ncr-print-btn');
+        this.$select = this.$body.find('.ncr-theme-select');
+        this.$subtreeRow = this.$body.find('.ncr-subtree-row');
+        this.$subtree = this.$body.find('.ncr-subtree-check');
         this.$btn.on('click', () => this.printNote());
-        return this.$widget;
     }
 
     async refreshWithNote(note) {
