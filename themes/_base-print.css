@@ -43,6 +43,13 @@ html, body {
 
 .notecast-doc li { margin: 0.15em 0; }
 
+/* A nested list is part of the item it hangs off, not a block following it —
+   the outer rule's bottom margin would open a gap inside the <li>. Written as
+   `li > ul` so it outranks a theme's own `ul` rule by specificity, whichever
+   order the two are concatenated in. */
+.notecast-doc li > ul,
+.notecast-doc li > ol { margin: 0.15em 0 0; }
+
 .notecast-doc img { max-width: 100%; height: auto; }
 
 /* Pandoc-style size classes: the widget carries `![x](f.png){.img-large}`
@@ -95,6 +102,11 @@ html, body {
     padding: 4pt 6pt;
     text-align: left;
 }
+
+/* A table long enough to break repeats its header on the next sheet — without
+   this the continuation is a grid of unlabelled columns. Only reached where a
+   theme allows the break; the base keeps tables whole (see below). */
+.notecast-doc thead { display: table-header-group; }
 
 .notecast-doc blockquote {
     margin: 0.6em 0;

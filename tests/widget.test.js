@@ -171,6 +171,124 @@ test('markdownToHtml leaves quote markers inside a code fence alone', () => {
     assert.ok(html.includes('&gt; git log'));
 });
 
+// ── nested lists ─────────────────────────────────────────────────────────────
+
+test('markdownToHtml nests an indented list inside the item it hangs off', () => {
+    // Flattening it printed a sub-point at the same weight as the point it
+    // qualifies — the reader cannot tell which one it belongs to.
+    const html = widget.markdownToHtml('- outer\n  - inner');
+    assert.strictEqual((html.match(/<ul>/g) || []).length, 2, html);
+    // The nested list opens *inside* the outer <li>, so the outer item's
+    // closing tag comes after the inner list's.
+    assert.ok(html.indexOf('<li>outer') < html.indexOf('<li>inner</li>'), html);
+    assert.ok(html.indexOf('</ul>') < html.lastIndexOf('</li>'), html);
+});
+
+test('markdownToHtml lets a nested list change marker style', () => {
+    const html = widget.markdownToHtml('- step\n  1. first\n  2. second');
+    assert.ok(html.includes('<ul>') && html.includes('<ol>'));
+    assert.ok(html.indexOf('<ol>') > html.indexOf('<li>step'), html);
+    assert.ok(html.indexOf('</ol>') < html.indexOf('</ul>'), html);
+});
+
+test('markdownToHtml returns to the outer level when the indent does', () => {
+    const html = widget.markdownToHtml('- a\n  - b\n- c');
+    assert.ok(html.indexOf('</ul>') < html.indexOf('<li>c'), html);
+    assert.strictEqual((html.match(/<ul>/g) || []).length, 2, html);
+    assert.strictEqual((html.match(/<\/ul>/g) || []).length, 2, html);
+});
+
+test('markdownToHtml folds a wrapped item back into the item', () => {
+    // A bullet that runs over two lines is one item. The second line used to
+    // become a <p> sitting between two <li>.
+    const html = widget.markdownToHtml('- a bullet that runs\n  over two lines');
+    assert.ok(html.includes('<li>a bullet that runs over two lines</li>'), html);
+    assert.ok(!html.includes('<p>'), html);
+});
+
+test('markdownToHtml closes every list level at the end of the document', () => {
+    const html = widget.markdownToHtml('- a\n  - b\n    - c');
+    assert.strictEqual((html.match(/<ul>/g) || []).length, 3, html);
+    assert.strictEqual((html.match(/<\/ul>/g) || []).length, 3, html);
+    assert.strictEqual((html.match(/<li>/g) || []).length,
+        (html.match(/<\/li>/g) || []).length, html);
+});
+
+// ── tables ───────────────────────────────────────────────────────────────────
+
+test('markdownToHtml renders a pipe table', () => {
+    // `meetingNote` ships a table in its skeleton (## Actions), and it reached
+    // paper as the literal pipe characters.
+    const html = widget.markdownToHtml(
+        '| Action | Owner |\n|---|---|\n| Migrate | Stefan |');
+    assert.ok(html.includes('<table>'), html);
+    assert.ok(html.includes('<th>Action</th>'), html);
+    assert.ok(html.includes('<td>Migrate</td>'), html);
+    assert.ok(!html.includes('|'), `pipes left in the output: ${html}`);
+});
+
+test('markdownToHtml keeps an empty table cell as a cell', () => {
+    // The type says to leave an owner blank rather than invent one, so the
+    // column has to survive being empty.
+    const html = widget.markdownToHtml('| A | O |\n|---|---|\n| do it |  |');
+    assert.ok(html.includes('<td>do it</td><td></td>'), html);
+});
+
+test('markdownToHtml pads a short table row instead of dropping the table', () => {
+    const html = widget.markdownToHtml('| A | B | C |\n|---|---|---|\n| one |');
+    assert.strictEqual((html.match(/<td/g) || []).length, 3, html);
+});
+
+test('markdownToHtml carries table alignment into the cells', () => {
+    const html = widget.markdownToHtml('| l | c | r |\n|:--|:-:|--:|\n| 1 | 2 | 3 |');
+    assert.ok(html.includes('text-align:left'), html);
+    assert.ok(html.includes('text-align:center'), html);
+    assert.ok(html.includes('text-align:right'), html);
+});
+
+test('markdownToHtml escapes table cells', () => {
+    // Same reasoning as everywhere else here: the print window is same-origin
+    // with Trilium.
+    const html = widget.markdownToHtml('| a |\n|---|\n| <img src=x onerror=alert(1)> |');
+    assert.ok(!html.includes('<img'), html);
+    assert.ok(html.includes('&lt;img'), html);
+});
+
+test('markdownToHtml applies inline formatting inside table cells', () => {
+    const html = widget.markdownToHtml('| a |\n|---|\n| **bold** and `code` |');
+    assert.ok(html.includes('<strong>bold</strong>'), html);
+    assert.ok(html.includes('<code>code</code>'), html);
+});
+
+test('markdownToHtml reads an escaped pipe as text, not as a cell boundary', () => {
+    const html = widget.markdownToHtml('| a | b |\n|---|---|\n| x \\| y | z |');
+    assert.strictEqual((html.match(/<td/g) || []).length, 2, html);
+    assert.ok(html.includes('<td>x | y</td>'), html);
+});
+
+test('markdownToHtml ends a table at the first line that is not a row', () => {
+    const html = widget.markdownToHtml('| a |\n|---|\n| 1 |\n\nAfter.');
+    assert.ok(html.indexOf('</table>') < html.indexOf('<p>After.</p>'), html);
+});
+
+test('markdownToHtml does not read a stray pipe as a table', () => {
+    // The delimiter row has to match the header's cell count — that rule is
+    // what keeps ordinary prose out of a <table>.
+    const html = widget.markdownToHtml('cost | benefit\n---\n\nplain text');
+    assert.ok(!html.includes('<table>'), html);
+});
+
+test('markdownToHtml leaves a table inside a code fence alone', () => {
+    const html = widget.markdownToHtml('```\n| a | b |\n|---|---|\n```');
+    assert.ok(!html.includes('<table>'), html);
+    assert.ok(html.includes('| a | b |'), html);
+});
+
+test('markdownToHtml closes an open list before a table', () => {
+    const html = widget.markdownToHtml('- a\n\n| h |\n|---|\n| v |');
+    assert.ok(html.indexOf('</ul>') < html.indexOf('<table>'), html);
+});
+
 // ── images ───────────────────────────────────────────────────────────────────
 
 /**

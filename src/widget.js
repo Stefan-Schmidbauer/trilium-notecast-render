@@ -463,22 +463,33 @@ class NotecastRenderWidget extends api.RightPanelWidget {
         return String(css ?? '').replace(/<\/(style|script)/gi, '<\\/$1');
     }
 
-    /** Minimal Markdown → HTML. Headings, fenced code, unordered and ordered
-     *  lists, blockquotes, bold/italic/inline-code, images, paragraphs.
-     *  Deliberately small; replace with a full renderer (columns, tables) when
-     *  the plugin matures.
+    /** Minimal Markdown → HTML. Headings, fenced code, nested unordered and
+     *  ordered lists, pipe tables, blockquotes, bold/italic/inline-code, images,
+     *  paragraphs. Deliberately small — but everything the shipped types are
+     *  written in has to be in it.
      *
      *  Ordered lists and blockquotes are here because `_base-print.css` styles
      *  both and no type could produce either: a numbered step came out as
      *  running text, and `> caveat` printed the literal angle bracket. The
      *  `itTip` type depends on the two — its theme finds the caveat as "the
      *  blockquote" — but `kbEntry` and `meetingNote` were quietly losing their
-     *  numbering to this as well. */
+     *  numbering to this as well.
+     *
+     *  Nesting and tables joined them for the same reason: `meetingNote`'s
+     *  skeleton *is* a table (`## Actions`, columns Action/Owner/Due) and a
+     *  handout that indents a sub-point is ordinary prose. Both printed as
+     *  literal pipes and as a flat list — see CLAUDE.md, "Lists and tables". */
     markdownToHtml(md, urls = {}, baseUrl = '') {
         const lines = md.replace(/\r\n/g, '\n').split('\n');
         const out = [];
         const inl = (text) => this.inline(text, urls, baseUrl);
-        let inCode = false, listTag = null, para = [], quote = [];
+        let inCode = false, para = [], quote = [];
+        // One entry per open list level, innermost last, each remembering where
+        // its open item's content sits in `out`. A level's <li> stays open until
+        // the next sibling or the end of the list, because a nested list belongs
+        // *inside* the item it hangs off.
+        const stack = [];
+        const indentOf = (s) => s.match(/^[ \t]*/)[0].replace(/\t/g, '    ').length;
         const flushPara = () => {
             if (para.length) { out.push(`<p>${inl(para.join(' '))}</p>`); para = []; }
         };
@@ -490,13 +501,44 @@ class NotecastRenderWidget extends api.RightPanelWidget {
                 quote = [];
             }
         };
-        const closeList = () => { if (listTag) { out.push(`</${listTag}>`); listTag = null; } };
-        // Switching marker style starts a new list rather than continuing the
-        // old one under the wrong tag.
-        const openList = (tag) => {
-            if (listTag !== tag) { closeList(); out.push(`<${tag}>`); listTag = tag; }
+        // Closing tag onto the item's own line while nothing has been emitted
+        // since — a flat list then reads `<li>a</li>`. Once a nested list has
+        // opened inside the item, `</li>` has to follow that list instead.
+        const endItem = () => {
+            const top = stack[stack.length - 1];
+            if (!top || top.itemAt < 0) return;
+            if (top.itemAt === out.length - 1) out[top.itemAt] += '</li>';
+            else out.push('</li>');
+            top.itemAt = -1;
         };
-        for (const line of lines) {
+        const closeList = () => {
+            while (stack.length) { endItem(); out.push(`</${stack.pop().tag}>`); }
+        };
+        const addItem = (indent, tag, content) => {
+            // Anything indented deeper than this item ended with it.
+            while (stack.length && indent < stack[stack.length - 1].indent) {
+                endItem(); out.push(`</${stack.pop().tag}>`);
+            }
+            const top = stack[stack.length - 1];
+            if (!top || indent > top.indent) {
+                // Deeper than the open item: a list inside it, which is why
+                // that item's <li> was left open.
+                out.push(`<${tag}>`);
+                stack.push({ tag, indent, itemAt: -1 });
+            } else if (top.tag !== tag) {
+                // Switching marker style starts a new list rather than
+                // continuing the old one under the wrong tag.
+                endItem(); out.push(`</${stack.pop().tag}>`);
+                out.push(`<${tag}>`);
+                stack.push({ tag, indent, itemAt: -1 });
+            } else {
+                endItem();
+            }
+            out.push(`<li>${content}`);
+            stack[stack.length - 1].itemAt = out.length - 1;
+        };
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
             if (line.trim().startsWith('```')) {
                 flushPara(); flushQuote(); closeList();
                 out.push(inCode ? '</code></pre>' : '<pre><code>');
@@ -509,15 +551,82 @@ class NotecastRenderWidget extends api.RightPanelWidget {
             flushQuote();
             const h = line.match(/^(#{1,3})\s+(.*)$/);
             if (h) { flushPara(); closeList(); out.push(`<h${h[1].length}>${inl(h[2])}</h${h[1].length}>`); continue; }
+            const table = this.tableAt(lines, i, urls, baseUrl);
+            if (table) { flushPara(); closeList(); out.push(table.html); i = table.last; continue; }
             const ol = line.match(/^\s*\d+[.)]\s+(.*)$/);
-            if (ol) { flushPara(); openList('ol'); out.push(`<li>${inl(ol[1])}</li>`); continue; }
+            if (ol) { flushPara(); addItem(indentOf(line), 'ol', inl(ol[1])); continue; }
             const li = line.match(/^\s*[-*]\s+(.*)$/);
-            if (li) { flushPara(); openList('ul'); out.push(`<li>${inl(li[1])}</li>`); continue; }
+            if (li) { flushPara(); addItem(indentOf(line), 'ul', inl(li[1])); continue; }
             if (line.trim() === '') { flushPara(); closeList(); continue; }
+            // A wrapped item continues the item, not the document: without this
+            // the second line of a bullet became a <p> sitting between two <li>.
+            const open = stack[stack.length - 1];
+            if (open && open.itemAt === out.length - 1) {
+                out[open.itemAt] += ` ${inl(line.trim())}`;
+                continue;
+            }
             para.push(line.trim());
         }
         flushPara(); flushQuote(); closeList(); if (inCode) out.push('</code></pre>');
         return out.join('\n');
+    }
+
+    /**
+     * A pipe table starting at `lines[i]` — `{ html, last }` — or null.
+     *
+     * GitHub's shape, and its rule for what counts: a header row, then a
+     * delimiter row of dashes with *the same number of cells*. That count is
+     * what keeps an ordinary paragraph containing a pipe, or a `---` rule under
+     * a line of prose, from being swallowed as a table.
+     *
+     * A row shorter than the header is padded and a longer one cut, so a table
+     * with one ragged row still prints as a table — on paper a missing cell is
+     * a gap the reader can see, while a dropped table is not.
+     */
+    tableAt(lines, i, urls = {}, baseUrl = '') {
+        const head = lines[i];
+        const delim = lines[i + 1];
+        if (typeof head !== 'string' || typeof delim !== 'string') return null;
+        if (!head.includes('|') || !/^\s*\|?(\s*:?-+:?\s*\|)*\s*:?-+:?\s*\|?\s*$/.test(delim)) return null;
+        const header = this.tableCells(head);
+        const marks = this.tableCells(delim);
+        if (header.length < 1 || marks.length !== header.length) return null;
+
+        const aligns = marks.map((m) => {
+            const left = m.startsWith(':'), right = m.endsWith(':');
+            if (left && right) return 'center';
+            if (right) return 'right';
+            if (left) return 'left';
+            return '';
+        });
+        // The alignment is one of four strings this function produced itself;
+        // the cell text goes through inline(), which escapes.
+        const cell = (tag, text, align) =>
+            `<${tag}${align ? ` style="text-align:${align}"` : ''}>` +
+            `${this.inline(text, urls, baseUrl)}</${tag}>`;
+        const row = (cells, tag) => '<tr>' + aligns
+            .map((align, c) => cell(tag, cells[c] ?? '', align)).join('') + '</tr>';
+
+        const body = [];
+        let last = i + 1;
+        while (last + 1 < lines.length) {
+            const next = lines[last + 1];
+            if (next.trim() === '' || !next.includes('|') || /^\s*```/.test(next)) break;
+            body.push(row(this.tableCells(next), 'td'));
+            last++;
+        }
+        const html = `<table>\n<thead>${row(header, 'th')}</thead>\n` +
+            (body.length ? `<tbody>\n${body.join('\n')}\n</tbody>\n` : '') + '</table>';
+        return { html, last };
+    }
+
+    /** One table row → its cells. The outer pipes are optional, and `\|` is a
+     *  pipe inside a cell rather than a cell boundary. */
+    tableCells(row) {
+        const s = String(row ?? '').trim()
+            .replace(/^\|/, '')
+            .replace(/(?<!\\)\|\s*$/, '');
+        return s.split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, '|'));
     }
 
     /**
