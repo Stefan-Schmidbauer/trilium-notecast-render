@@ -1,0 +1,19 @@
+/* US Letter page size — the sheet swap for a Letter variant of an A4 theme.
+ *
+ * NOT a theme by itself, and not a per-type file either. `build-zip.py` appends
+ * it *after* a type's stylesheet, so the type keeps its own margins, typography
+ * and margin boxes and only the paper changes. `@page` cascades like any other
+ * rule: this `size` comes later and wins, the earlier `margin` survives.
+ *
+ * Why that is enough: Letter is 216 × 279 mm against A4's 210 × 297 — 6 mm
+ * wider, 18 mm shorter. Margins stated in millimetres therefore still hold; the
+ * text column gains 6 mm and the page breaks 18 mm earlier. Nothing to re-tune.
+ *
+ * Where it is NOT enough: a theme that positions blocks from the top of the
+ * sheet in absolute millimetres. `letter.css` places the recipient block for a
+ * DIN window envelope, and a US envelope is a different window in a different
+ * place — that variant needs its own measurements, not this file. */
+
+@page {
+    size: Letter portrait;
+}

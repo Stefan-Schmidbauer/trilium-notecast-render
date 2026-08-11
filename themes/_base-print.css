@@ -1,7 +1,8 @@
 /* Shared print base for every Notecast print theme.
  *
  * NOT a note by itself. `build-zip.py` concatenates this file with one
- * per-type file (e.g. `letter.css`) to produce the CSS of a single theme note.
+ * per-type file (e.g. `letter.css`) to produce the CSS of a single theme note,
+ * optionally followed by an override fragment such as `_page-us-letter.css`.
  * A #notecastTheme note has to be self-contained — Trilium notes cannot @import
  * one another — so the duplication happens at build time and the repo stays DRY.
  *

@@ -1,0 +1,200 @@
+/* Print theme for the `handout` type — #notecastTheme=handout,
+ * note title "A4 Handout".
+ *
+ * A handout is the document a participant takes home from a talk or a course.
+ * It is not a printed deck: it runs as prose over several sheets, and it has to
+ * stand on its own, because the person reading it in a fortnight no longer has
+ * the speaker. Portrait, therefore, and set for continuous reading rather than
+ * for glancing at from a distance — the opposite of `slide.css`.
+ *
+ * Deliberately plain. This is the theme every installation gets, so it carries
+ * no branding: typography, white space and hairlines only. A house theme adds
+ * its own frame in its own note (themes are additive — any number of
+ * `#notecastTheme=handout` notes may coexist).
+ *
+ * Multi-page is the normal case here, which is what most of the rules below are
+ * about: a heading must not be the last thing on a sheet, a single line must not
+ * be left behind, and the reader must be able to find their place again after
+ * turning the page. */
+
+@page {
+    /* The left margin is the wider one on purpose: handouts get stapled or
+     * punched, and a symmetric page loses its inner margin to the staple. */
+    size: A4 portrait;
+    margin: 24mm 20mm 22mm 25mm;
+
+    /* A page number, because a stapled document that loses its order is worth
+     * less than one that does not. This is an `@page` margin box: Chrome 151
+     * renders it (measured — on every sheet, first included, along with
+     * `counter(pages)`), older engines and Firefox ignore the block entirely.
+     * Degrading to no page number is acceptable; nothing else moves.
+     *
+     * The alternatives were measured too, and both are worse: `position: fixed`
+     * does repeat per sheet but sits *inside* the type area and overprints the
+     * line it lands on, and pushing it into the margin with a negative offset
+     * makes Chrome defer the overflow to the *next* sheet — the first page
+     * loses its footer altogether. */
+    @bottom-right {
+        content: counter(page) ' / ' counter(pages);
+        font-family: "Georgia", "Times New Roman", serif;
+        font-size: 8.5pt;
+        color: #666;
+        vertical-align: top;
+        padding-top: 4mm;
+    }
+}
+
+.notecast-doc {
+    /* 10.5 pt over 165 mm gives roughly 75 characters a line — the range that
+     * reads comfortably in continuous prose. The base's 11 pt is set for shorter
+     * documents, where a wider setting costs nothing. */
+    font-size: 10.5pt;
+    line-height: 1.55;
+}
+
+/* No `hyphens: auto` here, tempting as it is at this measure: hyphenation needs
+ * a language, and the print document is built without a `lang` attribute — the
+ * rule would sit in the stylesheet looking effective and do nothing. Setting it
+ * belongs in the widget, on the document, not in a theme. */
+
+/* --- Headings ------------------------------------------------------------
+ * Sized to keep three levels apart in a document long enough to need three.
+ * The rule under the h1 comes from the base; h2 gets a hairline of its own so a
+ * section start is findable when leafing through, and h3 stays text-weight so
+ * the two do not compete. */
+
+.notecast-doc h1 {
+    font-size: 19pt;
+    line-height: 1.2;
+    margin-bottom: 0.6em;
+}
+
+.notecast-doc h2 {
+    font-size: 14pt;
+    margin: 1.6em 0 0.4em;
+    padding-bottom: 0.15em;
+    border-bottom: 0.5pt solid #ccc;
+}
+
+.notecast-doc h3 {
+    font-size: 11.5pt;
+    margin: 1.1em 0 0.25em;
+}
+
+/* The first heading of a sheet has no preceding block to be spaced from. */
+.notecast-doc > :first-child,
+.notecast-page > :first-child { margin-top: 0; }
+
+/* --- The lead paragraph --------------------------------------------------
+ * The paragraph directly under the title says what the document covers. Set a
+ * little larger, it does the work an abstract does — matched by position, not
+ * by a class, so the type's format stays plain Markdown. */
+.notecast-doc h1 + p {
+    font-size: 11.5pt;
+    line-height: 1.5;
+    color: #333;
+}
+
+/* --- Body ---------------------------------------------------------------- */
+
+.notecast-doc p { margin: 0 0 0.55em; }
+
+.notecast-doc ul,
+.notecast-doc ol {
+    margin: 0.4em 0 0.7em;
+    padding-left: 7mm;
+}
+
+.notecast-doc li { margin: 0.25em 0; }
+
+/* Never break a sheet after one line of a paragraph, nor carry one over. Two
+ * is the smallest number that still reads as a continuation. */
+.notecast-doc p,
+.notecast-doc li,
+.notecast-doc blockquote { orphans: 2; widows: 2; }
+
+/* A list that spills over a page boundary is fine; a list whose *first* item is
+ * stranded at the foot of a sheet is not. */
+.notecast-doc ul,
+.notecast-doc ol { break-inside: auto; }
+.notecast-doc li { break-inside: avoid; }
+
+/* --- Tables --------------------------------------------------------------
+ * Lines instead of boxes: a grid of borders is heavier than the data in it.
+ * Small tables stay whole; a long one is allowed to break, because forcing it
+ * onto the next sheet would leave half a page empty. */
+.notecast-doc table {
+    font-size: 9.5pt;
+    margin: 0.7em 0;
+    /* The base keeps every table whole; over several sheets that is the wrong
+     * default. A table taller than the space left would be pushed to the next
+     * page and leave the rest of this one empty. The header repeats — that rule
+     * is in the base, and it is what makes a broken table readable. */
+    break-inside: auto;
+}
+
+/* Individual rows still stay whole: a row split across sheets is unreadable in
+ * a way a split table is not. */
+.notecast-doc tr { break-inside: avoid; }
+
+.notecast-doc th,
+.notecast-doc td {
+    border: none;
+    border-bottom: 0.5pt solid #ddd;
+    padding: 3pt 6pt 3pt 0;
+    vertical-align: top;
+}
+
+.notecast-doc th {
+    border-bottom: 1pt solid #111;
+    font-weight: 600;
+}
+
+.notecast-doc th:last-child,
+.notecast-doc td:last-child { padding-right: 0; }
+
+/* --- Code, quotes, figures ----------------------------------------------- */
+
+.notecast-doc pre {
+    font-size: 9pt;
+    line-height: 1.4;
+    padding: 6pt 8pt;
+}
+
+.notecast-doc blockquote {
+    margin: 0.7em 0;
+    font-size: 10pt;
+}
+
+.notecast-doc img { break-inside: avoid; }
+
+/* A figure sitting directly against the following text reads as part of it. */
+.notecast-doc img.center,
+.notecast-doc img.block-center { margin: 4mm auto; }
+
+/* --- Speaker notes -------------------------------------------------------
+ * `::: {.notes}` is part of the slide syntax, and a handout written alongside a
+ * deck may inherit one. Set apart rather than hidden — see slide.css. To print
+ * without them, `display: none` here. */
+.notecast-doc .notes {
+    margin-top: 6mm;
+    padding-top: 3mm;
+    border-top: 0.5pt dashed #999;
+    font-size: 9.5pt;
+    color: #444;
+    break-inside: avoid;
+}
+
+/* --- Columns -------------------------------------------------------------
+ * `::: {.columns}` works in any Markdown note, not only in slides. On a page
+ * this narrow two columns are already tight, so nothing here tries to make
+ * three or four look good — that is a slide layout. */
+.notecast-doc .columns {
+    display: flex;
+    gap: 8mm;
+    margin: 0.6em 0;
+    break-inside: avoid;
+}
+
+.notecast-doc .column { flex: 1; min-width: 0; }
+.notecast-doc .column > :first-child { margin-top: 0; }

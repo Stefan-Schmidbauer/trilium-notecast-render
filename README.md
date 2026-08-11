@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/github/license/Stefan-Schmidbauer/trilium-notecast-render)](LICENSE)
 [![TriliumNext](https://img.shields.io/badge/TriliumNext-compatible-000000?logo=trilium&logoColor=white)](https://triliumnotes.org)
 [![MCP server](https://img.shields.io/badge/MCP-server-7c3aed)](https://github.com/Stefan-Schmidbauer/trilium-notecast-mcp)
+[![Presenter plugin](https://img.shields.io/badge/Notecast-presenter%20plugin-0a7ea4)](https://github.com/Stefan-Schmidbauer/trilium-presenter-plugin)
 
 A Trilium Notes plugin that renders a note to a **print-ready document** (e.g.
 DIN A4) using a selectable print theme, then hands it to the browser's print
@@ -84,17 +85,18 @@ automatically on every note it creates.
 
 ## What it ships
 
-Importing the zip installs the widget, six document types, one print theme per
-type, and the documentation:
+Importing the zip installs the widget, seven document types, at least one print
+theme per type, and the documentation:
 
 | Type id | Document | Created as | Print theme |
 |---|---|---|---|
-| `note` | A short captured thought | text (HTML) | A4 Note |
-| `kbEntry` | A knowledge base article | markdown | A4 Knowledge Base |
+| `note` | A short captured thought | text (HTML) | A4 Note, US Letter Note |
+| `kbEntry` | A knowledge base article | markdown | A4 Knowledge Base, US Letter Knowledge Base |
 | `meetingNote` | Minutes of one meeting | markdown | A4 Meeting Note |
 | `checklist` | Steps to tick off on paper | markdown | A4 Checklist |
 | `itTip` | One problem, one fix, one page | markdown | A4 IT Tip |
 | `letter` | Formal letter, window envelope | text (HTML) | A4 Letter |
+| `handout` | Course material to take home, over several sheets | markdown | A4 Handout |
 
 Plus a print theme for `slide` — that type is owned by the presenter; this only
 adds a way to print one as a landscape handout.
@@ -134,7 +136,8 @@ it in Trilium — the tests cover the string-producing helpers, not the UI.
 ```
 src/widget.js      — the render widget (frontend NoteContextAwareWidget)
 types/             — type definitions (#notecastType=<id>): the authoring formats
-themes/            — print CSS; _base-print.css + one file per type
+themes/            — print CSS; _base-print.css + one file per type,
+                     plus _page-us-letter.css for the US Letter variants
 docs/              — user documentation, shipped inside the zip
 build-zip.py       — declares the note tree; builds the zip and its meta.json
 ```

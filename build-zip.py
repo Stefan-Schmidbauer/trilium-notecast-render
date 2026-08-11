@@ -33,17 +33,25 @@ JS = "application/javascript;env=frontend"
 EXT = {MD: ".mkd", CSS: ".css", HTML: ".html", JS: ".js"}
 
 
-def theme(title: str, type_id: str, css: str) -> dict:
-    """A theme note: shared print base + per-type stylesheet, concatenated.
+def theme(title: str, type_id: str, *css: str) -> dict:
+    """A theme note: shared print base + per-type stylesheet(s), concatenated.
 
     Trilium notes cannot @import one another, so each theme note must carry
     complete CSS. Joining here is what keeps every theme from being one more
     copy of the base.
+
+    More than one stylesheet may follow the base, appended in the order given.
+    That is how a US Letter variant is built: the same type file, then
+    `_page-us-letter.css`, which overrides nothing but the sheet size. Order is
+    the whole mechanism — CSS cascades, so a later file wins.
     """
-    return dict(title=title, mime=CSS, label={"notecastTheme": type_id}, text=(
-        (HERE / "themes/_base-print.css").read_text()
-        + "\n\n/* ── type-specific ─────────────────────────────────── */\n\n"
-        + (HERE / f"themes/{css}").read_text()))
+    parts = [(HERE / "themes/_base-print.css").read_text()]
+    for name in css:
+        parts.append("\n\n/* ── %s ─────────────────────────────────── */\n\n"
+                     % name.removesuffix(".css"))
+        parts.append((HERE / f"themes/{name}").read_text())
+    return dict(title=title, mime=CSS, label={"notecastTheme": type_id},
+                text="".join(parts))
 
 
 def type_def(title: str, type_id: str, md: str, **mechanics: str) -> dict:
@@ -87,6 +95,8 @@ TREE = dict(title="Notecast Render", mime=HTML, text=(
         type_def("IT Tip", "itTip", "it-tip.md",
                  notecastTargetType="code", notecastMime=MD),
         type_def("Letter", "letter", "letter.md", notecastTargetType="text"),
+        type_def("Handout", "handout", "handout.md",
+                 notecastTargetType="code", notecastMime=MD),
     ]),
 
     dict(title="Themes", mime=HTML, text=(
@@ -99,9 +109,17 @@ TREE = dict(title="Notecast Render", mime=HTML, text=(
         theme("A4 Checklist", "checklist", "checklist.css"),
         theme("A4 IT Tip", "itTip", "it-tip.css"),
         theme("A4 Letter", "letter", "letter.css"),
+        theme("A4 Handout", "handout", "handout.css"),
         # `slide` belongs to trilium-presenter-plugin; we only add a way to
         # print one. See docs/note-types.md.
         theme("A4 Slide (landscape)", "slide", "slide.css"),
+        # US Letter variants of the two types whose layout is pure flow, so the
+        # sheet can be swapped without re-measuring anything. "US" leads the
+        # name because `letter` is also a type here, and "Letter Letter" is not
+        # a theme name anyone should have to parse. See themes/_page-us-letter.css.
+        theme("US Letter Note", "note", "note.css", "_page-us-letter.css"),
+        theme("US Letter Knowledge Base", "kbEntry",
+              "kb-entry.css", "_page-us-letter.css"),
     ]),
 ])
 

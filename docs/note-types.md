@@ -14,16 +14,23 @@ That single note is read by two different consumers:
 
 | Type id | Document | Created as | Print theme |
 |---|---|---|---|
-| `note` | A short captured thought | Trilium text (HTML) | A4 Note |
-| `kbEntry` | A knowledge base article | Markdown code note | A4 Knowledge Base |
+| `note` | A short captured thought | Trilium text (HTML) | A4 Note, US Letter Note |
+| `kbEntry` | A knowledge base article | Markdown code note | A4 Knowledge Base, US Letter Knowledge Base |
 | `meetingNote` | Minutes of one meeting | Markdown code note | A4 Meeting Note |
 | `checklist` | Steps to tick off on paper | Markdown code note | A4 Checklist |
 | `itTip` | One problem, one fix, one page | Markdown code note | A4 IT Tip |
 | `letter` | A formal letter for a window envelope | Trilium text (HTML) | A4 Letter |
+| `handout` | Course material to take home, over several sheets | Markdown code note | A4 Handout |
 
 They deliberately differ in target type, so you can see the mechanics doing
 different things: `note` and `letter` become HTML text notes, the rest become
 Markdown code notes.
+
+`handout` is the one type written to run past a single sheet, and it is the
+reason to reach for **Include subtree**: a folder of handouts prints as one
+booklet. It is also not a printed deck — see the format note, which says so at
+length, because a handout assembled from slide bullets is the failure this type
+exists to prevent.
 
 `slide` is **not** in this list — that type belongs to
 [trilium-presenter-plugin](https://github.com/Stefan-Schmidbauer/trilium-presenter-plugin),

@@ -50,13 +50,29 @@ complete CSS. In this repository that would mean one copy of the same base style
 per theme, so the source is split:
 
 ```
-themes/_base-print.css   — shared base: page box, typography, tables, breaks
-themes/letter.css        — what makes a letter a letter
-themes/checklist.css     — …
+themes/_base-print.css     — shared base: page box, typography, tables, breaks
+themes/letter.css          — what makes a letter a letter
+themes/checklist.css       — …
+themes/_page-us-letter.css — an override fragment: US Letter instead of A4
 ```
 
 `build-zip.py` concatenates `_base-print.css` with one per-type file to produce
 each theme note. `_base-print.css` is never a theme by itself.
+
+A theme may append **further fragments** after the type file — CSS cascades, so
+a later file wins. That is how the US Letter variants are built:
+
+```python
+theme("US Letter Note", "note", "note.css", "_page-us-letter.css"),
+```
+
+`_page-us-letter.css` contains nothing but `@page { size: Letter portrait; }`.
+The type keeps its own margins, typography and margin boxes; only the sheet
+changes. It works because Letter (216 × 279 mm) differs from A4 (210 × 297 mm)
+by 6 mm of width and 18 mm of height — margins stated in millimetres still hold.
+It would **not** work for `letter.css`, which positions the recipient block from
+the top of the sheet for a DIN window envelope; a US envelope needs its own
+measurements, not a size swap.
 
 If you edit a theme **inside Trilium**, you are editing the concatenated result.
 Fold the change back into the right source file, or the next build will overwrite
@@ -85,11 +101,17 @@ it.
 ## Naming, and why there is no medium label
 
 A type simply has a set of named themes. There is no label saying "this is for
-screen" or "this is for print" — the medium lives in the **name**.
+screen" or "this is for print", nor one saying which paper it is for — both live
+in the **name**.
 
-The consequence is deliberate: the dropdown cannot filter by medium, so the name
-is the only guide for the person choosing. Hence the `A4 …` prefix on everything
-shipped here.
+The consequence is deliberate: the dropdown cannot filter, so the name is the
+only guide for the person choosing. Hence the paper size leads every title
+shipped here — `A4 Note`, `US Letter Note`. Two themes bound to the same type
+appear side by side in the dropdown and are told apart by that prefix alone.
+
+`US Letter` is spelled out rather than shortened to `Letter`, because `letter`
+is also one of the shipped **types** — a formal letter. `Letter Letter` is not a
+name anyone should have to parse.
 
 This matters because the presenter also has themes, and they are **not** in this
 namespace. Screen themes for slides stay in the presenter under `#presenterTheme`;
@@ -115,6 +137,44 @@ wins on equal specificity — but it has to say so:
 ```css
 .notecast-page { page-break-before: auto; break-before: auto; }
 ```
+
+## Page numbers and anything else that repeats on every sheet
+
+Use the **margin boxes of `@page`**. They sit outside the text column, so they
+never collide with content, and they are the only construct here that can count
+pages:
+
+```css
+@page {
+    margin: 24mm 20mm 22mm 25mm;
+
+    @bottom-right {
+        content: counter(page) ' / ' counter(pages);
+        vertical-align: top;
+        padding-top: 4mm;
+    }
+}
+```
+
+`handout.css` does exactly this. Measured against Chrome 151: `@top-*` and
+`@bottom-*` render on every sheet including the first, and both `counter(page)`
+and `counter(pages)` resolve. Engines without the feature — Firefox, older
+Chrome — ignore the block, and the document prints without the furniture.
+Nothing else shifts, which is why it is safe to use.
+
+The two obvious-looking alternatives both fail, so do not spend an afternoon on
+them:
+
+- **`position: fixed`** *does* repeat on every sheet, but it is positioned
+  against the **text column**, not the paper. `top: 0` puts a header on the same
+  baseline as the first line of body text and overprints it — measured, both at
+  y = 70.3 pt with a 25 mm margin.
+- **A negative offset to escape into the margin** breaks the first sheet. Past
+  roughly −4 mm Chrome defers the overflowing box to the *next* page: the footer
+  belonging to sheet 1 is painted at the top of sheet 2, and sheet 1 has none at
+  all. Measured at −6, −10, −15 and −24 mm.
+- **A background image on `html`** tiles down the whole document, not per sheet.
+  From page 2 on it drifts through the middle of the text.
 
 ## Debugging a theme
 

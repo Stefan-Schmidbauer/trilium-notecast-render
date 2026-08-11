@@ -128,6 +128,7 @@ def test_the_widget_note_carries_the_widget_label(root):
     ("checklist", "code", "text/x-markdown"),
     ("itTip", "code", "text/x-markdown"),
     ("letter", "text", None),
+    ("handout", "code", "text/x-markdown"),
 ])
 def test_each_shipped_type_carries_its_mechanics(root, type_id, target, mime):
     """A type note without its mechanics is the precise shape of the shipped bug:
@@ -167,6 +168,28 @@ def test_themes_carry_the_print_base_inline(archive):
 
 def test_the_print_base_is_not_shipped_as_a_theme_of_its_own(root):
     assert not any("_base-print" in n["title"] for n in walk(root))
+
+
+def test_the_page_size_fragment_is_not_shipped_as_a_theme_of_its_own(root):
+    """`_page-us-letter.css` is an override appended to a type file, not a
+    stylesheet anyone would print with — on its own it is a bare @page rule."""
+    assert not any("_page-us-letter" in n["title"] for n in walk(root))
+
+
+def test_us_letter_themes_end_on_the_letter_page_size(root, archive):
+    """The variant is built by appending a `size` override to an A4 type file,
+    so it only works while the override comes *last*. Reorder the fragments —
+    or move a type file's own @page below them — and the theme silently prints
+    A4 again, which no test of labels or titles would notice."""
+    import re
+    _meta, _names, contents = archive
+    variants = [n for n in walk(root) if n["title"].startswith("US Letter")]
+    assert variants, "the US Letter themes are shipped; finding none means they were dropped"
+    for note in variants:
+        member = next(k for k in contents if k.endswith(note["dataFileName"]))
+        sizes = re.findall(r"size:\s*([^;]+);", contents[member].decode())
+        assert sizes, note["title"]
+        assert sizes[-1].strip().lower() == "letter portrait", (note["title"], sizes)
 
 
 # ── version stamping ─────────────────────────────────────────────────────────

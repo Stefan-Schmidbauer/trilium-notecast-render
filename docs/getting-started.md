@@ -82,7 +82,10 @@ what the theme intends:
   meeting notes and the highlight on irreversible checklist steps print white on
   white.
 
-Paper size follows the theme (`A4 portrait`, or landscape for slides).
+Paper size follows the theme, and the theme's name says which it is: everything
+shipped here is A4 (landscape for slides), except `US Letter Note` and
+`US Letter Knowledge Base`. Those two are the same themes on US Letter paper —
+same margins, same type, 18 mm less page.
 
 ## Where the content comes from
 
