@@ -23,8 +23,11 @@ way to ask a follow-up question. Everything needed to act must be on the page.
   not quietly promote it to a decision.
 
 ## Conventions & Voice
-Language, address form (formal/informal) and tone are NOT fixed here. If the
-author has not told you which to use, ask before writing — do not guess.
+Write in **German** unless the author has asked for another language.
+
+Minutes record what happened; they are not addressed to anyone, so there is no
+address form to settle — do not ask for one. Keep the tone neutral even where
+the meeting was not, and keep decisions in the past tense.
 
 Never invent participants, decisions, owners or dates. If the source material
 does not say who owns an action, write the action with an empty owner and flag

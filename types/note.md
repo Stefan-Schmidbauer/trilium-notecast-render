@@ -13,9 +13,11 @@ Trilium's editor stores).
 - Keep it under ~150 words.
 
 ## Conventions & Voice
-Language, address form (formal/informal) and tone are NOT fixed here. If the
-author has not told you which to use, ask before writing — do not guess a
-language or tone.
+Write in **German** unless the author has asked for another language.
+
+A note captures a thought; it is not addressed to a reader, so there is normally
+no second person in it at all. Do not ask for an address form — a note is too
+short to be worth a round trip. Keep the tone plain and factual.
 
 ## Example body
 ```html

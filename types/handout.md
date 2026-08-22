@@ -49,9 +49,14 @@ the rows are explanations rather than values, write a list with a bold lead-in
 reads better and survives a narrow column.
 
 ## Conventions & Voice
-Language, address form (formal/informal) and tone are NOT fixed here. If the
-author has not told you which to use, ask before writing — do not guess. Match
-the language of the event the handout belongs to.
+Write in **German**, unless the author has asked for another language or the
+handout belongs to an event held in one — then match the event. Take that from
+the material the handout is built from; it is a rule, not a guess.
+
+A handout explains a subject to someone who was there, so it needs no address
+form settled up front — do not ask for one. Where a procedure section does speak
+to the reader, use the formal *Sie* unless the author has already established
+otherwise.
 
 Never invent what was taught. If the source material — slides, notes, a
 recording — does not cover a point, leave the gap and flag it to the author

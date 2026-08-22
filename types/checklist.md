@@ -23,8 +23,11 @@ for someone standing in front of the thing, pen in hand — not reading at a des
   if it is skipped.
 
 ## Conventions & Voice
-Language, address form (formal/informal) and tone are NOT fixed here. If the
-author has not told you which to use, ask before writing — do not guess.
+Write in **German** unless the author has asked for another language.
+
+Items are bare imperatives ("Hauptventil schließen"), a form that carries no
+address at all in German — so there is no address form to settle, and you must
+not ask for one. Stay terse; the reader is standing in front of the thing.
 
 Never invent a safety step, a legal requirement, or a threshold value. If the
 source material does not give one, leave a blank to be filled in and tell the

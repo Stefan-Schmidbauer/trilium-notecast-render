@@ -15,8 +15,11 @@ A durable, reference-style article for the knowledge base. Created as a Trilium
   already has today's context.
 
 ## Conventions & Voice
-Language, address form (formal/informal) and tone are NOT fixed here. If the
-author has not told you which to use, ask before writing — do not guess.
+Write in **German** unless the author has asked for another language.
+
+An entry is written *about* a subject, not *to* a person, so there is no address
+form to settle — do not ask for one. Keep the tone neutral and factual; the
+reader wants the subject explained, not addressed.
 
 ## Skeleton
 ```markdown

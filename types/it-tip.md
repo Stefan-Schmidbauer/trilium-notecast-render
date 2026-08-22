@@ -40,8 +40,12 @@ it is not a tip.**
   list, blockquote).
 
 ## Conventions & Voice
-Language, address form (formal or informal) and tone are NOT fixed here. If the
-author has not told you which to use, ask before writing — do not guess.
+Write in **German** unless the author has asked for another language.
+
+The **address form** (formal or informal) is NOT fixed here, and this type needs
+it: every step is an instruction aimed at the reader, so the choice is visible
+in the first numbered step and has to hold to the last one. If the author has
+not told you which to use, ask before writing — do not guess.
 
 Never invent a command, path, registry key, menu item, group policy name,
 version number or setting. An IT tip is followed literally, by someone who

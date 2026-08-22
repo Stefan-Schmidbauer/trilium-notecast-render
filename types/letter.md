@@ -27,11 +27,12 @@ Rules:
   print theme leaves vertical space for a handwritten one.
 
 ## Conventions & Voice
-Language, address form (formal/informal) and tone are NOT fixed here. If the
-author has not told you which to use, ask before writing — do not guess. This
-matters more for a letter than for any other type: the wrong register or a
-mis-set salutation is visible in the first line, and the letter is going out on
-paper where nothing can be corrected afterwards.
+Write in **German** unless the author has asked for another language.
+
+The **address form** (formal or informal) is NOT fixed here, and no type needs
+it more: the wrong register is visible in the salutation, in the first line, and
+the letter is going out on paper where nothing can be corrected afterwards. If
+the author has not told you which to use, ask before writing — do not guess.
 
 Never invent an address, a reference number, a customer number or a date. Leave
 the block empty and tell the author what is missing.
