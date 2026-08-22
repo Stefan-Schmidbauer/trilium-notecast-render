@@ -3,8 +3,11 @@
  *
  * The point of a printed checklist is the box you tick, so the box has to
  * survive whatever the Markdown converter does with `- [ ]`. Two cases are
- * covered: a real <input type="checkbox"> (converters that support task lists)
- * and the literal text "[ ]" left in the item (minimal converters). */
+ * covered: a real <input type="checkbox"> — what the widget now emits, marked
+ * `li.task` — and a plain item, where the box is drawn from the marker so a
+ * checklist written without task syntax still prints something to tick. The two
+ * must never both appear; that is what put "[ ]" beside an empty square on
+ * every printed item before the converter learned task lists. */
 
 .notecast-doc {
     font-family: "Helvetica", "Arial", sans-serif;
@@ -38,8 +41,9 @@
     break-inside: avoid;
 }
 
-/* Case 1 — converter produced a real checkbox: enlarge it and place it in the
- * gutter instead of drawing our own. */
+/* Case 1 — a real checkbox: enlarge it and place it in the gutter instead of
+ * drawing our own. It carries `disabled` (nothing on paper is clickable), which
+ * some UA stylesheets grey out, so opacity is pinned. */
 .notecast-doc ul li input[type="checkbox"] {
     position: absolute;
     left: 0;
@@ -47,14 +51,27 @@
     width: 5mm;
     height: 5mm;
     margin: 0;
+    opacity: 1;
     appearance: none;
     -webkit-appearance: none;
     border: 1pt solid #111;
     background: #fff;
 }
 
+/* A ticked box in the source (`- [x]`) prints as ticked. */
+.notecast-doc ul li input[type="checkbox"]:checked::after {
+    content: "✓";
+    position: absolute;
+    inset: 0;
+    font-size: 4.5mm;
+    line-height: 5mm;
+    text-align: center;
+}
+
 /* Case 2 — no checkbox element: draw the box ourselves. Suppressed when an
- * input is present, so the two never both appear. */
+ * input is present, so the two never both appear. `li.task` says so without
+ * :has(), which is what the widget marks and what an older engine can still
+ * read; the :has() rule below covers a checkbox arriving any other way. */
 .notecast-doc ul li::before {
     content: "";
     position: absolute;
@@ -66,6 +83,7 @@
     background: #fff;
 }
 
+.notecast-doc ul li.task::before,
 .notecast-doc ul li:has(input[type="checkbox"])::before {
     content: none;
 }

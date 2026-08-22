@@ -12,6 +12,8 @@
  *     content = print CSS
  *   - an image is an attachment of the note that shows it, and a bare file name
  *     in the content is matched against the attachment titles
+ *   - #notecastIgnore keeps a note (bare) or a branch (=subtree) out of a
+ *     subtree print; it is this plugin's label, not the presenter's #slideIgnore
  *
  * The markdown renderer here is deliberately NOT the presenter's, even though
  * both emit the same structure for Pandoc fenced divs. The presenter parks
@@ -208,10 +210,14 @@ class NotecastRenderWidget extends api.RightPanelWidget {
      * different #notecastInstance, but a print job produces one stylesheet, and
      * a document that switched typography partway down is worse than one that
      * does not — the dropdown is filled from the note you pressed Print on.
+     *
+     * `true` is the root flag: #notecastIgnore on the note you pressed Print on
+     * does not exclude that note. Honouring it there would answer a deliberate
+     * Print with "Nothing to print", which reads as a broken plugin.
      */
     async renderSubtree(note) {
         const collected = [];
-        await this.collectNotes(note, new Set(), collected);
+        await this.collectNotes(note, new Set(), collected, true);
 
         const pages = [];
         for (const n of collected) {
@@ -232,16 +238,47 @@ class NotecastRenderWidget extends api.RightPanelWidget {
      * Trilium tree, and a cycle would otherwise recurse until the tab dies.
      * Image and file notes are skipped: their content is binary, and the
      * fallback path would print it as a wall of `<pre>`.
+     *
+     * `isRoot` marks the note Print was pressed on, which is exempt from
+     * #notecastIgnore — see ignoreMode. Recursive calls leave it at its default,
+     * so only the entry point from renderSubtree is ever the root.
      */
-    async collectNotes(note, visited, out) {
+    async collectNotes(note, visited, out, isRoot = false) {
         if (visited.has(note.noteId)) return;
         visited.add(note.noteId);
 
-        if (note.type !== 'image' && note.type !== 'file') out.push(note);
+        const ignore = isRoot ? null : this.ignoreMode(note);
+        if (ignore === 'subtree') return;
+
+        const printable = note.type !== 'image' && note.type !== 'file';
+        if (printable && ignore !== 'note') out.push(note);
 
         for (const child of await this.getSortedChildren(note)) {
             await this.collectNotes(child, visited, out);
         }
+    }
+
+    /**
+     * How #notecastIgnore applies to this note: 'subtree', 'note', or null.
+     *
+     * Contract, "Print exclusion": bare keeps the note off paper but still walks
+     * its children — that is what makes it usable on a container, which can be
+     * dropped without hiding what it holds. `=subtree` drops the branch. Any
+     * other value reads as bare, matching the presenter's #slideIgnore.
+     *
+     * It is deliberately NOT #slideIgnore. The paradigm case for that label is a
+     * "Handouts" folder kept off screen precisely because it belongs on paper;
+     * reading it here would suppress exactly the branch the print job is for.
+     * A note that means both carries both labels.
+     *
+     * Trilium returns '' for a bare label and null when it is absent, so the
+     * test is presence, not truthiness — `if (value)` would ignore every bare
+     * one, which is the common form.
+     */
+    ignoreMode(note) {
+        const value = note.getLabelValue('notecastIgnore');
+        if (value === null || value === undefined) return null;
+        return String(value).trim().toLowerCase() === 'subtree' ? 'subtree' : 'note';
     }
 
     /**
@@ -514,7 +551,7 @@ class NotecastRenderWidget extends api.RightPanelWidget {
         const closeList = () => {
             while (stack.length) { endItem(); out.push(`</${stack.pop().tag}>`); }
         };
-        const addItem = (indent, tag, content) => {
+        const addItem = (indent, tag, content, cls = '') => {
             // Anything indented deeper than this item ended with it.
             while (stack.length && indent < stack[stack.length - 1].indent) {
                 endItem(); out.push(`</${stack.pop().tag}>`);
@@ -534,7 +571,7 @@ class NotecastRenderWidget extends api.RightPanelWidget {
             } else {
                 endItem();
             }
-            out.push(`<li>${content}`);
+            out.push(`<li${cls ? ` class="${cls}"` : ''}>${content}`);
             stack[stack.length - 1].itemAt = out.length - 1;
         };
         for (let i = 0; i < lines.length; i++) {
@@ -556,7 +593,24 @@ class NotecastRenderWidget extends api.RightPanelWidget {
             const ol = line.match(/^\s*\d+[.)]\s+(.*)$/);
             if (ol) { flushPara(); addItem(indentOf(line), 'ol', inl(ol[1])); continue; }
             const li = line.match(/^\s*[-*]\s+(.*)$/);
-            if (li) { flushPara(); addItem(indentOf(line), 'ul', inl(li[1])); continue; }
+            if (li) {
+                flushPara();
+                // `- [ ] step` is the whole of how the `checklist` type is
+                // written, so the box has to become an element. Without this the
+                // brackets survived escaping as literal text *and* the theme drew
+                // its own box beside them — every printed item read "[ ] step"
+                // next to an empty square.
+                const task = li[1].match(/^\[([ xX])\](?=\s|$)\s*(.*)$/);
+                if (task) {
+                    const checked = task[1] !== ' ' ? ' checked' : '';
+                    addItem(indentOf(line), 'ul',
+                        `<input type="checkbox" disabled${checked}> ${inl(task[2])}`,
+                        'task');
+                } else {
+                    addItem(indentOf(line), 'ul', inl(li[1]));
+                }
+                continue;
+            }
             if (line.trim() === '') { flushPara(); closeList(); continue; }
             // A wrapped item continues the item, not the document: without this
             // the second line of a bullet became a <p> sitting between two <li>.

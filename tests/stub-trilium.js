@@ -48,14 +48,22 @@ globalThis.window = { location: { origin: 'https://trilium.example' } };
  * `positions` (noteId → notePosition) so a test can hand the walk children in
  * one order and tree positions in another — which is the case getSortedChildren
  * exists for, and the only way to catch it silently trusting froca's order.
+ *
+ * `labels` is a plain object; getLabelValue mirrors froca's contract of `null`
+ * for an absent label. A **bare** label is therefore `{ notecastIgnore: '' }`,
+ * not `true` — the empty string is what Trilium hands back, and it is the form
+ * the ignore walk has to treat as present.
  */
 function fakeNote({ noteId = 'n1', type = 'code', mime = 'text/x-markdown',
                     content = '', attachments = [], children = [],
-                    positions = null } = {}) {
+                    positions = null, labels = {} } = {}) {
     return {
         noteId,
         type,
         mime,
+        getLabelValue(name) {
+            return Object.prototype.hasOwnProperty.call(labels, name) ? labels[name] : null;
+        },
         async getContent() { return content; },
         async getAttachments() { return attachments; },
         hasChildren() { return children.length > 0; },

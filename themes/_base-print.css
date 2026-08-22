@@ -51,6 +51,13 @@ html, body {
 .notecast-doc li > ul,
 .notecast-doc li > ol { margin: 0.15em 0 0; }
 
+/* A task item (`- [ ] …`) carries its own box, so the bullet would be a second
+   marker in front of it. This lives in the base because a checklist printed as
+   part of a subtree is styled by whichever theme the print job chose, not by
+   checklist.css — that theme should not have to know about task lists to avoid
+   printing "• ☐ step". The box itself stays the theme's business. */
+.notecast-doc li.task { list-style: none; }
+
 .notecast-doc img { max-width: 100%; height: auto; }
 
 /* Pandoc-style size classes: the widget carries `![x](f.png){.img-large}`

@@ -191,6 +191,49 @@ test('markdownToHtml lets a nested list change marker style', () => {
     assert.ok(html.indexOf('</ol>') < html.indexOf('</ul>'), html);
 });
 
+test('markdownToHtml turns a task item into a checkbox, not literal brackets', () => {
+    // The whole `checklist` type is written in `- [ ]`. Leaving the brackets as
+    // text printed them beside the box the theme drew: "[ ] step ☐".
+    const html = widget.markdownToHtml('- [ ] Close the main valve');
+    assert.ok(html.includes('<input type="checkbox" disabled>'), html);
+    assert.ok(html.includes('class="task"'), html);
+    assert.ok(!html.includes('[ ]'), html);
+});
+
+test('markdownToHtml carries a ticked box through as checked', () => {
+    for (const src of ['- [x] done', '- [X] done']) {
+        const html = widget.markdownToHtml(src);
+        assert.ok(html.includes('<input type="checkbox" disabled checked>'), html);
+        assert.ok(!html.includes('[x]') && !html.includes('[X]'), html);
+    }
+});
+
+test('markdownToHtml leaves a plain item and a bracketed one alone', () => {
+    // Only `[ ]`/`[x]` directly after the marker is a box. Anything else — a
+    // reference-style bracket, a placeholder to fill in — is item text.
+    assert.ok(widget.markdownToHtml('- a').includes('<li>a</li>'));
+    const html = widget.markdownToHtml('- [see appendix] applies');
+    assert.ok(html.includes('<li>[see appendix] applies</li>'), html);
+    assert.ok(!html.includes('checkbox'), html);
+});
+
+test('markdownToHtml escapes task item text like any other', () => {
+    const html = widget.markdownToHtml('- [ ] <script>alert(1)</script>');
+    assert.ok(!html.includes('<script>'), html);
+    assert.ok(html.includes('&lt;script&gt;'), html);
+});
+
+test('markdownToHtml accepts a task item with no text after the box', () => {
+    const html = widget.markdownToHtml('- [ ]');
+    assert.ok(html.includes('<input type="checkbox" disabled>'), html);
+});
+
+test('markdownToHtml nests task items like any other list', () => {
+    const html = widget.markdownToHtml('- [ ] outer\n  - [ ] inner');
+    assert.strictEqual((html.match(/<ul>/g) || []).length, 2, html);
+    assert.strictEqual((html.match(/checkbox/g) || []).length, 2, html);
+});
+
 test('markdownToHtml returns to the outer level when the indent does', () => {
     const html = widget.markdownToHtml('- a\n  - b\n- c');
     assert.ok(html.indexOf('</ul>') < html.indexOf('<li>c'), html);
@@ -684,4 +727,105 @@ test('the page break rules survive a theme that ships none', () => {
     assert.ok(doc.includes('.notecast-page:first-child { page-break-before: avoid'));
     assert.ok(doc.indexOf('.notecast-page {') < doc.indexOf('color: red'),
         'theme CSS must come last so it can override deliberately');
+});
+
+// ── #notecastIgnore ──────────────────────────────────────────────────────────
+
+/**
+ * The renderer's own exclusion label. Deliberately not the presenter's
+ * #slideIgnore — see the contract, "Print exclusion": the folder that label
+ * usually sits on is kept off screen *because* it belongs on paper.
+ */
+
+test('#notecastIgnore=subtree drops the branch, siblings survive', async () => {
+    const root = fakeNote({
+        noteId: 'root', content: '# Root',
+        children: [
+            fakeNote({
+                noteId: 'skip', content: '# Scratch',
+                labels: { notecastIgnore: 'subtree' },
+                children: [fakeNote({ noteId: 'buried', content: '# Buried' })],
+            }),
+            fakeNote({ noteId: 'keep', content: '# Keep' }),
+        ],
+    });
+
+    const html = await widget.renderSubtree(root);
+    assert.ok(!html.includes('Scratch'));
+    assert.ok(!html.includes('Buried'), 'the branch below an ignored note was printed');
+    assert.ok(html.includes('Keep'), 'a sibling was dropped along with the branch');
+    assert.ok(html.includes('Root'));
+});
+
+test('a bare #notecastIgnore drops the note but keeps its children', async () => {
+    // The point of the bare form: a container can be kept off paper without
+    // hiding what it holds. Trilium hands a bare label back as '', so this is
+    // also the regression guard against testing the value for truthiness.
+    const root = fakeNote({
+        noteId: 'root', content: '# Root',
+        children: [
+            fakeNote({
+                noteId: 'folder', content: '# Folder heading',
+                labels: { notecastIgnore: '' },
+                children: [fakeNote({ noteId: 'a', content: '# Alpha' })],
+            }),
+        ],
+    });
+
+    const html = await widget.renderSubtree(root);
+    assert.ok(!html.includes('Folder heading'));
+    assert.ok(html.includes('Alpha'), 'children of a bare-ignored note were lost');
+});
+
+test('an unrecognised #notecastIgnore value reads as bare', async () => {
+    // Matching the presenter: only 'subtree' means the branch, anything else
+    // means this note. Failing open would print what someone tried to exclude.
+    const root = fakeNote({
+        noteId: 'root', content: '# Root',
+        children: [fakeNote({
+            noteId: 'x', content: '# Excluded', labels: { notecastIgnore: 'yes' },
+            children: [fakeNote({ noteId: 'a', content: '# Alpha' })],
+        })],
+    });
+
+    const html = await widget.renderSubtree(root);
+    assert.ok(!html.includes('Excluded'));
+    assert.ok(html.includes('Alpha'));
+});
+
+test('#notecastIgnore on the note Print was pressed on does not apply to itself', async () => {
+    // The root is chosen by hand. Honouring the label there would answer a
+    // deliberate Print with "Nothing to print" — a broken-looking plugin.
+    const root = fakeNote({
+        noteId: 'root', content: '# Root',
+        labels: { notecastIgnore: 'subtree' },
+        children: [fakeNote({ noteId: 'a', content: '# Alpha' })],
+    });
+
+    const html = await widget.renderSubtree(root);
+    assert.ok(html.includes('Root'), 'the note Print was pressed on was dropped');
+    assert.ok(html.includes('Alpha'), 'the root exemption did not reach its children');
+});
+
+test('#slideIgnore is not read by the renderer', async () => {
+    // The two labels stay separate on purpose. A deck whose "Handouts" folder
+    // carries #slideIgnore must still print — that is the whole reason.
+    const root = fakeNote({
+        noteId: 'root', content: '# Root',
+        children: [fakeNote({
+            noteId: 'h', content: '# Handouts', labels: { slideIgnore: 'subtree' },
+        })],
+    });
+
+    const html = await widget.renderSubtree(root);
+    assert.ok(html.includes('Handouts'), 'the renderer honoured a presenter label');
+});
+
+test('ignoreMode reports the three cases', () => {
+    const mode = labels => widget.ignoreMode(fakeNote({ labels }));
+    assert.strictEqual(mode({}), null);
+    assert.strictEqual(mode({ notecastIgnore: '' }), 'note');
+    assert.strictEqual(mode({ notecastIgnore: 'subtree' }), 'subtree');
+    assert.strictEqual(mode({ notecastIgnore: ' SubTree ' }), 'subtree',
+        'a value typed with padding or capitals silently became "note"');
 });
