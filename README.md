@@ -58,11 +58,16 @@ Decisions baked in (from the Notecast design discussion):
   only appears where there is a subtree. This is type-agnostic on purpose: a
   folder of meeting notes becomes a booklet by the same path a deck becomes a
   handout, which is why handouts left the presenter and landed here.
+- **Exclusion:** `#notecastIgnore` keeps a note off paper (bare) or drops its
+  whole branch (`=subtree`); the note you pressed Print on is exempt from its
+  own. It is this plugin's label — the presenter's `#slideIgnore` is not read
+  here, because the folder that one usually marks is kept off screen precisely
+  because it belongs in print.
 - **Mechanism:** browser print. No PDF library, **no backend scripting** — see
   below.
 - **Theme choice:** filtered by the note's `#notecastInstance`; you pick from that
-  type's themes. The theme's **note title** is its name (`A4 Print`,
-  `A4 Compact`); its **content** is the print CSS.
+  type's themes. The theme's **note title** is its name (`A4 Note`,
+  `US Letter Note`); its **content** is the print CSS.
 
 ## No backend scripting — by design
 
@@ -178,7 +183,7 @@ the UI. Issues and feedback are welcome.
 See the [docs/](docs/) folder:
 
 - [Getting Started](docs/getting-started.md) — install, first print, the theme picker
-- [Note Types](docs/note-types.md) — the six shipped types, and defining your own
+- [Note Types](docs/note-types.md) — the seven shipped types, and defining your own
 - [Themes](docs/themes.md) — writing print CSS, and how a theme note is assembled
 - [About](docs/about.md) — the Notecast family, author, license
 

@@ -96,7 +96,8 @@ it.
      document's language open, and a selector keyed to the word "Caveat" would
      silently stop working on a tip written in German
 3. Create the note in Trilium, label it `#notecastTheme=<typeId>`, and give it a
-   title that says what it is — `A4 Compact`, `A4 Letter`, `A4 Slide (landscape)`.
+   title that says what it is, paper size first — the shipped ones read
+   `A4 Letter`, `A4 Slide (landscape)`, `US Letter Note`.
 
 ## Naming, and why there is no medium label
 

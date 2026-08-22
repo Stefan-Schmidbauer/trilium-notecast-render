@@ -9,8 +9,8 @@ Import the plugin's `.zip` into Trilium (**Note tree → … → Import into not
 That creates one subtree containing:
 
 - the **widget** (the note labelled `#widget`) — the code that does the work
-- six **note types** (`#notecastType=…`) — the formats an AI assistant writes to
-- one **print theme** per type (`#notecastTheme=…`) — the CSS each is printed with
+- seven **note types** (`#notecastType=…`) — the formats an AI assistant writes to
+- at least one **print theme** per type (`#notecastTheme=…`) — the CSS each is printed with
 - this documentation
 
 **Then enable the widget.** Trilium neutralises executable labels in anything you
@@ -52,6 +52,22 @@ Three things worth knowing:
 - **Container notes are skipped.** A Trilium folder is an empty text note;
   printing it literally would put a blank sheet between the notes you want.
 - **Image and file notes are skipped**, but the notes beneath them are not.
+
+## Keeping something out of the print
+
+Put **`#notecastIgnore`** on a note and it stays off paper while its children
+still print — which is what you want on a folder you keep for order but never
+hand out. Use **`#notecastIgnore=subtree`** to drop the note *and* everything
+below it, for a scratch or archive branch parked inside a subtree you print.
+
+Two things to know:
+
+- The note you press Print on is never excluded by its own `#notecastIgnore`.
+  You selected it and asked for it; the label governs what hangs below it.
+- It is **not** the presenter's `#slideIgnore`, and this plugin does not read
+  that one. The two say different things: a "Handouts" folder is kept out of the
+  slide deck exactly because it belongs on paper. A note that should be left out
+  of both carries both labels.
 
 Handouts for a presentation used to be the presenter plugin's job. They are here
 now, because this plugin already prints every type and the presenter should only
