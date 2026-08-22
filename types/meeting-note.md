@@ -10,8 +10,11 @@ way to ask a follow-up question. Everything needed to act must be on the page.
 - Start with a single `# H1` naming the meeting and its date, e.g.
   `# Sprint Review — 2026-08-07`.
 - A short **metadata block** directly under the title: date, participants,
-  and who chaired or took the notes. Use a definition-style list, one item per
-  line, so it survives narrow print margins.
+  and who chaired or took the notes. Write it as a **`-` list**, one item per
+  line, so it survives narrow print margins. It has to be a list: consecutive
+  markdown lines collapse into a single paragraph, and the print theme then has
+  one long line to wrap wherever it fits — which is what the per-line rule is
+  there to prevent.
 - Then `## Topics`, one `###` per agenda item. Under each: what was discussed,
   compressed to the substance. Not a transcript.
 - `## Decisions` — the outcomes, each as one sentence in the past tense
@@ -37,9 +40,9 @@ it to the author.
 ```markdown
 # <Meeting> — <YYYY-MM-DD>
 
-**Date:** <YYYY-MM-DD>
-**Participants:** <names>
-**Notes by:** <name>
+- **Date:** <YYYY-MM-DD>
+- **Participants:** <names>
+- **Notes by:** <name>
 
 ## Topics
 

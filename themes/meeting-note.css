@@ -16,14 +16,32 @@
     font-family: "Helvetica", "Arial", sans-serif;
 }
 
-/* The metadata block: the run of short paragraphs between the title and the
- * first ## heading. Boxed off so it reads as a header, not as prose. */
-.notecast-doc h1 + p {
+/* The metadata block between the title and the first ## heading. Boxed off so
+ * it reads as a header, not as prose.
+ *
+ * Both shapes are matched on purpose. The type asks for one item per line, which
+ * only a list produces: consecutive markdown lines collapse into a single <p>,
+ * and on a narrow margin that one paragraph then wraps mid-item — "Teilnehmende:
+ * A, B, C Protokoll:" ending a line is exactly what the per-line rule exists to
+ * prevent. The <p> form stays matched so notes written before that keep their
+ * box instead of silently losing it. */
+.notecast-doc h1 + p,
+.notecast-doc h1 + ul {
     margin-top: 0.8em;
     padding: 4pt 6pt;
     background: #f4f4f4;
     border-left: 2pt solid #555;
     line-height: 1.6;
+}
+
+/* No markers: this is a header block that happens to be a list, not an
+ * enumeration the reader is meant to count. */
+.notecast-doc h1 + ul {
+    list-style: none;
+}
+
+.notecast-doc h1 + ul li {
+    margin: 0.1em 0;
 }
 
 .notecast-doc h2 {
