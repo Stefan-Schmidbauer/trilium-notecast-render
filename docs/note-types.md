@@ -88,10 +88,24 @@ the sections and lets their headings be written in whatever language the
 document uses. Match on a heading's text and you have quietly decided that every
 future document of that type is written in one language.
 
-**Leave language and tone open.** Every shipped type says that language and
-address form are not fixed and must be asked about rather than guessed. Which
-form of address a letter uses is not a detail a format should decide for every
-future letter.
+**Settle language once; ask about the address form only where it shows.** Every
+shipped type names a default language (German here) that the author can override
+per document — a default costs nothing to change and saves a question on every
+single note. The address form is handled the opposite way, and each type says
+which case it is in:
+
+- `letter` and `itTip` **ask** when the author has not said. Both speak to the
+  reader directly — the register is visible in the salutation, or in the first
+  numbered step — and it has to hold to the end.
+- `note`, `kbEntry`, `meetingNote`, `checklist` and `handout` state that there is
+  **nothing to ask about**: minutes record events, an entry is written about a
+  subject, a checklist item is a bare imperative. Asking there is a round trip
+  that buys nothing, so the format says so rather than leaving the model to
+  wonder.
+
+The point is not that a format should decide everything for every future
+document — it is that a format should only ask when the answer is visible in the
+result.
 
 ## Two ids, one contract
 
