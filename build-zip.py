@@ -23,6 +23,7 @@ import json
 import pathlib
 import sys
 import zipfile
+from typing import Any
 
 HERE = pathlib.Path(__file__).parent
 
@@ -47,8 +48,8 @@ def theme(title: str, type_id: str, *css: str) -> dict:
     """
     parts = [(HERE / "themes/_base-print.css").read_text()]
     for name in css:
-        parts.append("\n\n/* ── %s ─────────────────────────────────── */\n\n"
-                     % name.removesuffix(".css"))
+        parts.append(f"\n\n/* ── {name.removesuffix('.css')} "
+                     f"─────────────────────────────────── */\n\n")
         parts.append((HERE / f"themes/{name}").read_text())
     return dict(title=title, mime=CSS, label={"notecastTheme": type_id},
                 text="".join(parts))
@@ -65,7 +66,9 @@ def type_def(title: str, type_id: str, md: str, **mechanics: str) -> dict:
                 label={"notecastType": type_id, **mechanics})
 
 
-TREE = dict(title="Notecast Render", mime=HTML, text=(
+# Annotated because a node's values are heterogeneous — str, dict and list —
+# and an inferred union makes `{**TREE.get("label", {})}` in main() unusable.
+TREE: dict[str, Any] = dict(title="Notecast Render", mime=HTML, text=(
     "<p><strong>Notecast Render</strong> prints a Trilium note as an A4 document"
     " in a selectable theme.</p>\n<p>Open a note, pick a theme in the render"
     " widget, press Print. See <em>Documentation</em> for details.</p>\n"), kids=[
