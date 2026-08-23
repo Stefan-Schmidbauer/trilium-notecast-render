@@ -14,13 +14,13 @@ That single note is read by two different consumers:
 
 | Type id | Document | Created as | Print theme |
 |---|---|---|---|
-| `note` | A short captured thought | Trilium text (HTML) | A4 Note, US Letter Note |
-| `kbEntry` | A knowledge base article | Markdown code note | A4 Knowledge Base, US Letter Knowledge Base |
-| `meetingNote` | Minutes of one meeting | Markdown code note | A4 Meeting Note |
-| `checklist` | Steps to tick off on paper | Markdown code note | A4 Checklist |
-| `itTip` | One problem, one fix, one page | Markdown code note | A4 IT Tip |
-| `letter` | A formal letter for a window envelope | Trilium text (HTML) | A4 Letter |
-| `handout` | Course material to take home, over several sheets | Markdown code note | A4 Handout |
+| `note` | A short captured thought | `text` | A4 Note, US Letter Note |
+| `kbEntry` | A knowledge base article | `code` · `text/x-markdown` | A4 Knowledge Base, US Letter Knowledge Base |
+| `meetingNote` | Minutes of one meeting | `code` · `text/x-markdown` | A4 Meeting Note |
+| `checklist` | Steps to tick off on paper | `code` · `text/x-markdown` | A4 Checklist |
+| `itTip` | One problem, one fix, one page | `code` · `text/x-markdown` | A4 IT Tip |
+| `letter` | A formal letter for a window envelope | `text` | A4 Letter |
+| `handout` | Course material to take home, over several sheets | `code` · `text/x-markdown` | A4 Handout |
 
 They deliberately differ in target type, so you can see the mechanics doing
 different things: `note` and `letter` become HTML text notes, the rest become
@@ -59,6 +59,11 @@ Nothing here needs changing — you tag a note and you are done.
 
 4. Add at least one print theme for it — a note labelled `#notecastTheme=<id>`
    whose content is the CSS. See [Themes](themes.md).
+
+Every type shipped here ends with an **Attributes** section naming exactly the
+labels it carries, which is the starting point to copy and adjust. That section
+is not documentation *about* the definition: the build stamps the labels from
+that table, so what a definition says about itself is what it carries.
 
 The MCP picks the new type up on its next connection; no restart and no redeploy.
 A type is cached for a minute, so a change to the format note reaches the

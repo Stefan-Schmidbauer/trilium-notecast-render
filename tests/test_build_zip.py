@@ -13,13 +13,29 @@ Two of them carry most of the weight:
   against its own manifest — the check Trilium performs on import;
 * `test_every_declared_label_survives_into_the_manifest` compares the TREE
   declaration against what was emitted, which is the drift that shipped.
+
+The type labels are no longer declared in `build-zip.py` at all — they are read
+from each type file's `## Attributes` table, so the tests below assert the two
+ends of that parse: that every shipped type declares one, and that what it
+declares is what the manifest carries.
 """
 import io
 import json
+import re
 import zipfile
 
 import pytest
-from conftest import ZIP_NAME, build, bz, labels, walk, walk_paths, walk_tree, walk_tree_paths
+from conftest import (
+    REPO,
+    ZIP_NAME,
+    build,
+    bz,
+    labels,
+    walk,
+    walk_paths,
+    walk_tree,
+    walk_tree_paths,
+)
 
 # ── the archive matches its manifest ─────────────────────────────────────────
 
@@ -190,6 +206,91 @@ def test_us_letter_themes_end_on_the_letter_page_size(root, archive):
         sizes = re.findall(r"size:\s*([^;]+);", contents[member].decode())
         assert sizes, note["title"]
         assert sizes[-1].strip().lower() == "letter portrait", (note["title"], sizes)
+
+
+# ── a type's labels come from its own file ───────────────────────────────────
+
+TYPE_FILES = sorted(p.name for p in (REPO / "types").glob("*.md"))
+
+
+@pytest.mark.parametrize("name", TYPE_FILES)
+def test_every_type_file_declares_its_attributes(name):
+    """The table is the definition's own statement of what it carries. A type
+    file without one is a note someone copies and then has to guess at."""
+    declared = bz.attributes(REPO / "types" / name)
+    assert declared["notecastType"], name
+    assert declared["notecastTargetType"] in ("text", "code"), name
+
+
+def test_the_manifest_labels_are_what_the_type_files_declare(root):
+    """The parse has to survive into the archive.
+
+    `test_each_shipped_type_carries_its_mechanics` asserts the values a reader
+    would expect; this one asserts they came from the file rather than from
+    anywhere else, which is what makes the file the single source.
+    """
+    for path in (REPO / "types").glob("*.md"):
+        declared = bz.attributes(path)
+        note = next(n for n in walk(root)
+                    if labels(n).get("notecastType") == declared["notecastType"])
+        emitted = {k: v for k, v in labels(note).items() if k.startswith("notecast")}
+        assert emitted == declared, note["title"]
+
+
+@pytest.mark.parametrize("table,complaint", [
+    ("| `#notecastTypo` | `x` |", "unknown label"),
+    ("| `#notecastType` | `x` |\n| `#notecastType` | `y` |", "declared twice"),
+    ("| `#notecastTargetType` | `code` |", "nothing defines the id"),
+    ("| `#notecastType` | `x` |\n| `#notecastTargetType` | `binary` |", "not text|code"),
+    ("| `#notecastType` | `x` |\n| `#notecastMime` | `text/x-markdown` |",
+     "on a text type is never read"),
+    ("| `#notecastType` | `x` |\n| `#notecastTargetType` | `code` |",
+     "code type needs"),
+    ("| notecastType | x |", "cannot read attribute row"),
+])
+def test_a_broken_attributes_table_fails_the_build(tmp_path, table, complaint):
+    """Every one of these is stored by Trilium without complaint and only shows
+    up later, as a note created in the wrong shape — so the build has to be the
+    thing that refuses."""
+    md = tmp_path / "broken.md"
+    md.write_text(f"# Broken\n\n## Attributes\n\n| Label | Value |\n|---|---|\n{table}\n")
+    with pytest.raises(ValueError, match=re.escape(complaint)):
+        bz.attributes(md)
+
+
+def test_a_bare_label_is_read_as_an_empty_value(tmp_path):
+    """An em dash is how the table writes a label Trilium carries with no value
+    — `#presenterSlideFormat` in the sibling repo is one."""
+    md = tmp_path / "bare.md"
+    md.write_text("# Bare\n\n## Attributes\n\n| Label | Value |\n|---|---|\n"
+                  "| `#notecastType` | `bare` |\n| `#notecastParent` | — |\n")
+    assert bz.attributes(md)["notecastParent"] == ""
+
+
+def test_a_type_file_without_an_attributes_section_fails_the_build(tmp_path):
+    md = tmp_path / "silent.md"
+    md.write_text("# Silent\n\nA format that never says what it is.\n")
+    with pytest.raises(ValueError, match="no '## Attributes' section"):
+        bz.attributes(md)
+
+
+def test_the_type_tables_in_the_docs_are_current():
+    """README.md and docs/note-types.md hold the same generated table.
+
+    They are written by `python3 build-zip.py --sync-docs`, deliberately not by
+    the build: a repo that silently fixes itself hides the drift this test is
+    here to catch.
+    """
+    stale = bz.sync_docs(write=False)
+    assert stale == [], f"run: python3 build-zip.py --sync-docs ({', '.join(stale)})"
+
+
+def test_every_shipped_type_reaches_the_generated_table():
+    """The table is what a reader copies labels from; a type missing from it is
+    a type that exists only in the tree."""
+    table = bz.types_table()
+    for path in (REPO / "types").glob("*.md"):
+        assert f"`{bz.attributes(path)['notecastType']}`" in table, path.name
 
 
 # ── version stamping ─────────────────────────────────────────────────────────

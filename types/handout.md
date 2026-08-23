@@ -100,3 +100,16 @@ material "that will be sent", no availability. Those are the author's to offer.
 
 <Wo die Folien liegen, an wen Fragen gehen.>
 ```
+
+## Attributes
+
+The definition note carries these labels. They are the mechanics — what a
+note of this type is *created as*, which the MCP reads before it writes one.
+They belong to the definition, not to documentation about it: the build
+stamps the note from this table.
+
+| Label | Value |
+|---|---|
+| `#notecastType` | `handout` |
+| `#notecastTargetType` | `code` |
+| `#notecastMime` | `text/x-markdown` |

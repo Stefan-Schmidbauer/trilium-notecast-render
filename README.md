@@ -1,7 +1,6 @@
 # trilium-notecast-render
 
-[![Release](https://img.shields.io/github/v/release/Stefan-Schmidbauer/trilium-notecast-render?sort=semver)](https://github.com/Stefan-Schmidbauer/trilium-notecast-render/releases/latest)
-[![License: MIT](https://img.shields.io/github/license/Stefan-Schmidbauer/trilium-notecast-render)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![TriliumNext](https://img.shields.io/badge/TriliumNext-compatible-000000?logo=trilium&logoColor=white)](https://triliumnotes.org)
 [![MCP server](https://img.shields.io/badge/MCP-server-7c3aed)](https://github.com/Stefan-Schmidbauer/trilium-notecast-mcp)
 [![Presenter plugin](https://img.shields.io/badge/Notecast-presenter%20plugin-0a7ea4)](https://github.com/Stefan-Schmidbauer/trilium-presenter-plugin)
@@ -95,13 +94,13 @@ theme per type, and the documentation:
 
 | Type id | Document | Created as | Print theme |
 |---|---|---|---|
-| `note` | A short captured thought | text (HTML) | A4 Note, US Letter Note |
-| `kbEntry` | A knowledge base article | markdown | A4 Knowledge Base, US Letter Knowledge Base |
-| `meetingNote` | Minutes of one meeting | markdown | A4 Meeting Note |
-| `checklist` | Steps to tick off on paper | markdown | A4 Checklist |
-| `itTip` | One problem, one fix, one page | markdown | A4 IT Tip |
-| `letter` | Formal letter, window envelope | text (HTML) | A4 Letter |
-| `handout` | Course material to take home, over several sheets | markdown | A4 Handout |
+| `note` | A short captured thought | `text` | A4 Note, US Letter Note |
+| `kbEntry` | A knowledge base article | `code` · `text/x-markdown` | A4 Knowledge Base, US Letter Knowledge Base |
+| `meetingNote` | Minutes of one meeting | `code` · `text/x-markdown` | A4 Meeting Note |
+| `checklist` | Steps to tick off on paper | `code` · `text/x-markdown` | A4 Checklist |
+| `itTip` | One problem, one fix, one page | `code` · `text/x-markdown` | A4 IT Tip |
+| `letter` | A formal letter for a window envelope | `text` | A4 Letter |
+| `handout` | Course material to take home, over several sheets | `code` · `text/x-markdown` | A4 Handout |
 
 Plus a print theme for `slide` — that type is owned by the presenter; this only
 adds a way to print one as a landscape handout.
@@ -119,6 +118,7 @@ ruff check .                # lint, same versions CI uses
 pytest                      # the import zip matches the note tree it declares
 node --test                 # the widget's escaping and rendering helpers
 python3 build-zip.py        # build the archive locally
+python3 build-zip.py --sync-docs   # regenerate the type tables in README + docs
 ```
 
 Both suites run in CI on every push. Neither needs a Trilium instance:
@@ -140,7 +140,8 @@ it in Trilium — the tests cover the string-producing helpers, not the UI.
 
 ```
 src/widget.js      — the render widget (frontend NoteContextAwareWidget)
-types/             — type definitions (#notecastType=<id>): the authoring formats
+types/             — type definitions: the authoring format, and the labels
+                     each one carries (its `## Attributes` table)
 themes/            — print CSS; _base-print.css + one file per type,
                      plus _page-us-letter.css for the US Letter variants
 docs/              — user documentation, shipped inside the zip
@@ -159,6 +160,14 @@ Then import it in Trilium (**Note tree → … → Import into note**). Trilium
 neutralises executable labels in anything you import, so the widget note arrives
 carrying `#disabled:widget`: rename that attribute to `#widget`, then reload.
 Until you do, the plugin is installed but inert and no widget appears.
+
+The reload loads the widget; it does not necessarily show it. The widget lives in
+the right pane, so open that pane (**toggle right pane**, top right corner) and
+pick the **Widgets** tab — the puzzle-piece icon:
+
+![The right pane's Widgets tab, listing Notecast Render next to the presenter's widget](trilium_widget_show.png)
+
+Full walkthrough in [docs/getting-started.md](docs/getting-started.md).
 
 **The repo is the source of truth; Trilium is where it runs.** Edit files here,
 push them into Trilium via ETAPI to test, then commit. Nothing gets committed

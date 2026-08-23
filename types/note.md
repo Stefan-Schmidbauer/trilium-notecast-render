@@ -24,3 +24,15 @@ short to be worth a round trip. Keep the tone plain and factual.
 <p>Refill the espresso beans before Monday — the office order ships Friday.</p>
 <ul><li>Dark roast, not the decaf</li><li>2 kg bag</li></ul>
 ```
+
+## Attributes
+
+The definition note carries these labels. They are the mechanics — what a
+note of this type is *created as*, which the MCP reads before it writes one.
+They belong to the definition, not to documentation about it: the build
+stamps the note from this table.
+
+| Label | Value |
+|---|---|
+| `#notecastType` | `note` |
+| `#notecastTargetType` | `text` |

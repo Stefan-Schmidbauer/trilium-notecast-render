@@ -14,13 +14,16 @@ that meta.json went stale for months. Hence one source.
 Note ids are derived from the note path. That loses nothing — Trilium assigns
 fresh ids on import anyway, so they only have to be consistent with each other.
 
-Usage:  python3 build-zip.py [version]
+Usage:  python3 build-zip.py [version]      build the archive
+        python3 build-zip.py --sync-docs    regenerate the type tables in
+                                            README.md and docs/note-types.md
 """
 from __future__ import annotations
 
 import hashlib
 import json
 import pathlib
+import re
 import sys
 import zipfile
 from typing import Any
@@ -32,6 +35,63 @@ CSS = "text/css"
 HTML = "text/html"
 JS = "application/javascript;env=frontend"
 EXT = {MD: ".mkd", CSS: ".css", HTML: ".html", JS: ".js"}
+
+
+# The labels a type definition may carry. Anything else in an `## Attributes`
+# table is a typo — a label Trilium stores happily and no consumer ever reads.
+# The list is the MCP's authoring contract, `docs/notecast-contract.md` there.
+TYPE_LABELS = ("notecastType", "notecastTargetType", "notecastMime",
+               "notecastApplyLabels", "notecastParent", "notecastPrefix")
+
+# A value cell is the label's value in backticks, or an em dash for a label
+# carried bare — Trilium stores those with an empty value.
+ATTRIBUTE_ROW = re.compile(r"^\|\s*`#(\w+)`\s*\|\s*(?:`([^`]*)`|—)\s*\|\s*$")
+
+
+def attributes(path: pathlib.Path) -> dict[str, str]:
+    """The mechanics labels a type declares, read from its own `## Attributes`.
+
+    These labels used to be arguments to `type_def` here, while the type file
+    beside it described the same mechanics in prose — so the note someone
+    actually copies a definition from was the one place that did not say which
+    labels it needs. The table is now the single source, and it costs no
+    duplication: the file *is* the note's content, so writing it there ships it
+    to Trilium and stamps the labels in one move.
+
+    The table is validated rather than trusted. A label that is misspelt, or a
+    mime on a `text` type, is stored by Trilium without complaint and goes
+    unnoticed until the MCP creates a note of the wrong kind.
+    """
+    text = path.read_text()
+    section = re.search(r"^## Attributes$(.*?)(?=^## |\Z)", text, re.M | re.S)
+    if section is None:
+        raise ValueError(f"{path.name}: no '## Attributes' section")
+
+    found: dict[str, str] = {}
+    rows = [ln for ln in section.group(1).splitlines() if ln.startswith("|")]
+    # The first two are the header and its delimiter — skipped by position, not
+    # by their wording, which a translated type file would change.
+    for line in rows[2:]:
+        row = ATTRIBUTE_ROW.match(line)
+        if row is None:
+            raise ValueError(f"{path.name}: cannot read attribute row {line!r}")
+        name, value = row.group(1), row.group(2) or ""
+        if name not in TYPE_LABELS:
+            raise ValueError(f"{path.name}: unknown label #{name}")
+        if name in found:
+            raise ValueError(f"{path.name}: #{name} declared twice")
+        found[name] = value
+
+    if "notecastType" not in found:
+        raise ValueError(f"{path.name}: no #notecastType — nothing defines the id")
+    target = found.setdefault("notecastTargetType", "text")
+    if target not in ("text", "code"):
+        raise ValueError(f"{path.name}: #notecastTargetType={target!r} is not text|code")
+    if target == "text" and "notecastMime" in found:
+        raise ValueError(f"{path.name}: #notecastMime on a text type is never read")
+    if target == "code" and "notecastMime" not in found:
+        raise ValueError(f"{path.name}: a code type needs #notecastMime")
+    return found
 
 
 def theme(title: str, type_id: str, *css: str) -> dict:
@@ -55,15 +115,20 @@ def theme(title: str, type_id: str, *css: str) -> dict:
                 text="".join(parts))
 
 
-def type_def(title: str, type_id: str, md: str, **mechanics: str) -> dict:
-    """A type definition: the authoring format plus its mechanics labels.
+def type_def(title: str, md: str, summary: str) -> dict:
+    """A type definition: the authoring format, and the labels it declares.
 
-    The note is always markdown so the format reads well in Trilium. The
-    mechanics describe what gets *created*, which is a different thing — the
-    `letter` definition is markdown but produces HTML notes.
+    The note is always markdown so the format reads well in Trilium. The labels
+    describe what gets *created*, which is a different thing — the `letter`
+    definition is markdown but produces HTML notes.
+
+    `summary` is the one-line description of the document. It is not a label and
+    never reaches Trilium; it fills the Document column of the type tables that
+    `--sync-docs` writes into README.md and docs/note-types.md.
     """
-    return dict(title=title, mime=MD, file=f"types/{md}",
-                label={"notecastType": type_id, **mechanics})
+    path = f"types/{md}"
+    return dict(title=title, mime=MD, file=path, summary=summary,
+                label=attributes(HERE / path))
 
 
 # Annotated because a node's values are heterogeneous — str, dict and list —
@@ -88,18 +153,15 @@ TREE: dict[str, Any] = dict(title="Notecast Render", mime=HTML, text=(
         "<p>The authoring formats this plugin gives a printed form. Each child"
         " carries a <code>#notecastType</code> label; the MCP server reads them"
         " to author notes of that type.</p>\n"), kids=[
-        type_def("Note", "note", "note.md", notecastTargetType="text"),
-        type_def("Knowledge Base Entry", "kbEntry", "kb-entry.md",
-                 notecastTargetType="code", notecastMime=MD),
-        type_def("Meeting Note", "meetingNote", "meeting-note.md",
-                 notecastTargetType="code", notecastMime=MD),
-        type_def("Checklist", "checklist", "checklist.md",
-                 notecastTargetType="code", notecastMime=MD),
-        type_def("IT Tip", "itTip", "it-tip.md",
-                 notecastTargetType="code", notecastMime=MD),
-        type_def("Letter", "letter", "letter.md", notecastTargetType="text"),
-        type_def("Handout", "handout", "handout.md",
-                 notecastTargetType="code", notecastMime=MD),
+        type_def("Note", "note.md", "A short captured thought"),
+        type_def("Knowledge Base Entry", "kb-entry.md",
+                 "A knowledge base article"),
+        type_def("Meeting Note", "meeting-note.md", "Minutes of one meeting"),
+        type_def("Checklist", "checklist.md", "Steps to tick off on paper"),
+        type_def("IT Tip", "it-tip.md", "One problem, one fix, one page"),
+        type_def("Letter", "letter.md", "A formal letter for a window envelope"),
+        type_def("Handout", "handout.md",
+                 "Course material to take home, over several sheets"),
     ]),
 
     dict(title="Themes", mime=HTML, text=(
@@ -195,8 +257,93 @@ def build(node: dict, zf: zipfile.ZipFile, path: list[str], ids: list[str],
     return entry
 
 
+# ── the type tables in README.md and docs/note-types.md ─────────────────────
+
+# The heading whose table is generated, per file. Both files show the same
+# table and both used to be typed by hand — two more places to keep in step
+# with the type files, and the two no test could see.
+DOC_TABLES = {
+    "README.md": "## What it ships",
+    "docs/note-types.md": "## What this plugin ships",
+}
+
+
+def walk(node: dict):
+    """Every node of the TREE declaration, depth first."""
+    yield node
+    for kid in node.get("kids", []):
+        yield from walk(kid)
+
+
+def types_table() -> str:
+    """The shipped-types table, rendered from the declaration itself.
+
+    Created-as holds the label values, not prose. "markdown code note" is what
+    the table said for years, leaving the reader to translate it back into
+    `#notecastTargetType` and `#notecastMime` — at the moment they are trying to
+    write exactly those labels onto a definition of their own.
+    """
+    themes: dict[str, list[str]] = {}
+    for node in walk(TREE):
+        bound = node.get("label", {}).get("notecastTheme")
+        if bound:
+            themes.setdefault(bound, []).append(node["title"])
+
+    rows = ["| Type id | Document | Created as | Print theme |",
+            "|---|---|---|---|"]
+    for node in walk(TREE):
+        label = node.get("label", {})
+        if "notecastType" not in label:
+            continue
+        type_id = label["notecastType"]
+        created = f"`{label['notecastTargetType']}`"
+        if "notecastMime" in label:
+            created += f" · `{label['notecastMime']}`"
+        rows.append(f"| `{type_id}` | {node['summary']} | {created} | "
+                    f"{', '.join(themes.get(type_id, [])) or '—'} |")
+    return "\n".join(rows)
+
+
+def sync_docs(write: bool = True) -> list[str]:
+    """Rewrite the type table under each heading in DOC_TABLES.
+
+    Returns the files that changed — or, with `write=False`, the ones that would
+    change, which is what the test asserts is empty. A generated table nobody
+    regenerates is worse than a handwritten one, so the check has to fail loudly
+    rather than the build fixing the repo behind the committer's back.
+    """
+    table = types_table()
+    stale = []
+    for name, heading in DOC_TABLES.items():
+        path = HERE / name
+        text = path.read_text()
+        section = re.search(rf"^{re.escape(heading)}$.*?(?=^## |\Z)", text, re.M | re.S)
+        if section is None:
+            raise ValueError(f"{name}: no {heading!r} section to hold the table")
+        block = re.search(r"^\|.*(?:\n\|.*)*", section.group(0), re.M)
+        if block is None:
+            raise ValueError(f"{name}: {heading!r} holds no table to replace")
+        updated = (text[:section.start()]
+                   + section.group(0).replace(block.group(0), table, 1)
+                   + text[section.end():])
+        if updated != text:
+            stale.append(name)
+            if write:
+                path.write_text(updated)
+    return stale
+
+
 def main() -> None:
-    version = sys.argv[1] if len(sys.argv) > 1 else "dev"
+    args = sys.argv[1:]
+    if args and args[0] == "--sync-docs":
+        changed = sync_docs()
+        for name in changed:
+            print(f"Rewrote the type table in {name}")
+        if not changed:
+            print("Type tables already current")
+        return
+
+    version = args[0] if args else "dev"
     out = HERE / "trilium-notecast-render.zip"
 
     # Stamp the version onto the root note as #version. Without this the

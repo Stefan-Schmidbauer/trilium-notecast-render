@@ -61,3 +61,16 @@ it to the author.
 ## Open questions
 - <Unresolved point.>
 ```
+
+## Attributes
+
+The definition note carries these labels. They are the mechanics — what a
+note of this type is *created as*, which the MCP reads before it writes one.
+They belong to the definition, not to documentation about it: the build
+stamps the note from this table.
+
+| Label | Value |
+|---|---|
+| `#notecastType` | `meetingNote` |
+| `#notecastTargetType` | `code` |
+| `#notecastMime` | `text/x-markdown` |

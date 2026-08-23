@@ -79,3 +79,16 @@ instead of naming one.
 ## <Caveat>
 > <What breaks, what needs a restart, what cannot be undone.>
 ```
+
+## Attributes
+
+The definition note carries these labels. They are the mechanics — what a
+note of this type is *created as*, which the MCP reads before it writes one.
+They belong to the definition, not to documentation about it: the build
+stamps the note from this table.
+
+| Label | Value |
+|---|---|
+| `#notecastType` | `itTip` |
+| `#notecastTargetType` | `code` |
+| `#notecastMime` | `text/x-markdown` |

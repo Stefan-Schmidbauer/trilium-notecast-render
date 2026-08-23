@@ -46,3 +46,16 @@ worse than an obvious gap.
 - [ ] Record <value>: ____
 - [ ] **<Irreversible step.>** <What happens if skipped.>
 ```
+
+## Attributes
+
+The definition note carries these labels. They are the mechanics — what a
+note of this type is *created as*, which the MCP reads before it writes one.
+They belong to the definition, not to documentation about it: the build
+stamps the note from this table.
+
+| Label | Value |
+|---|---|
+| `#notecastType` | `checklist` |
+| `#notecastTargetType` | `code` |
+| `#notecastMime` | `text/x-markdown` |
