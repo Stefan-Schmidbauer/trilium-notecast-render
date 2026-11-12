@@ -9,7 +9,7 @@ A Trilium Notes plugin that renders a note to a **print-ready document** (e.g.
 DIN A4) using a selectable print theme, then hands it to the browser's print
 dialog — save as PDF or print on paper.
 
-![Notecast Render in Trilium's right panel — theme picker, subtree option and the print button, above the presenter's own widget](notecast-render-plugin.png)
+![Notecast Render in Trilium's right panel — theme picker, subtree option and the print button, above the presenter's own widget](assets/screenshots/notecast-render-plugin.png)
 
 The **render specialist** of the **Notecast** family. The shared
 [label contract](https://github.com/Stefan-Schmidbauer/trilium-notecast-mcp/blob/main/docs/notecast-contract.md)
@@ -165,7 +165,7 @@ The reload loads the widget; it does not necessarily show it. The widget lives i
 the right pane, so open that pane (**toggle right pane**, top right corner) and
 pick the **Widgets** tab — the puzzle-piece icon:
 
-![The right pane's Widgets tab, listing Notecast Render next to the presenter's widget](trilium_widget_show.png)
+![The right pane's Widgets tab, listing Notecast Render next to the presenter's widget](assets/screenshots/trilium_widget_show.png)
 
 Full walkthrough in [docs/getting-started.md](docs/getting-started.md).
 
