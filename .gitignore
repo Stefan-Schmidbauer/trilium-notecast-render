@@ -25,3 +25,6 @@ ssc_theme/
 .DS_Store
 .pytest_cache/
 .ruff_cache/
+
+# Articles, LinkedIn/website images, videos — local only, never committed
+marketing/
